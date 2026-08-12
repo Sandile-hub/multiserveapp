@@ -4,9 +4,7 @@ const dotenv = require("dotenv");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const cookieParser = require("cookie-parser");
-
 const http = require("http");
-
 const { Server } = require("socket.io");
 
 dotenv.config();
@@ -20,17 +18,61 @@ const app = express();
 const server = http.createServer(app);
 
 // ========================================
+// CORS CONFIGURATION
+// ========================================
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://multiserveapp-theta.vercel.app",
+  
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
+console.log("Allowed CORS origins:", allowedOrigins);
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests without an Origin header
+    // Such as Postman or server-to-server requests
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    console.log("CORS blocked origin:", origin);
+
+    return callback(new Error("Not allowed by CORS"));
+  },
+
+  credentials: true,
+
+  methods: [
+    "GET",
+    "POST",
+    "PUT",
+    "DELETE",
+    "PATCH",
+    "OPTIONS",
+  ],
+
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+  ],
+};
+
+// ========================================
 // SOCKET.IO
 // ========================================
 
 const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:5173",
+  cors: corsOptions,
 
-    credentials: true,
-
-    methods: ["GET", "POST"],
-  },
+  transports: ["websocket", "polling"],
 });
 
 global.io = io;
@@ -53,10 +95,15 @@ io.on("connection", (socket) => {
   // ====================================
 
   socket.on("register_user", (userId) => {
+    if (!userId) {
+      return;
+    }
+
     onlineUsers[userId] = socket.id;
 
     socket.join(`user_${userId}`);
 
+    console.log("USER REGISTERED:", userId);
     console.log("ONLINE USERS:", onlineUsers);
   });
 
@@ -65,6 +112,10 @@ io.on("connection", (socket) => {
   // ====================================
 
   socket.on("send_notification", (data) => {
+    if (!data || !data.userId) {
+      return;
+    }
+
     const targetSocket = onlineUsers[data.userId];
 
     if (targetSocket) {
@@ -77,6 +128,10 @@ io.on("connection", (socket) => {
   // ====================================
 
   socket.on("send_message", (data) => {
+    if (!data || !data.receiverId) {
+      return;
+    }
+
     const targetSocket = onlineUsers[data.receiverId];
 
     if (targetSocket) {
@@ -95,9 +150,13 @@ io.on("connection", (socket) => {
       if (onlineUsers[userId] === socket.id) {
         delete onlineUsers[userId];
 
+        console.log("USER REMOVED:", userId);
+
         break;
       }
     }
+
+    console.log("ONLINE USERS:", onlineUsers);
   });
 });
 
@@ -110,7 +169,14 @@ const limiter = rateLimit({
 
   max: 100,
 
-  message: "Too many requests, try again later.",
+  message: {
+    success: false,
+    message: "Too many requests, try again later.",
+  },
+
+  standardHeaders: true,
+
+  legacyHeaders: false,
 });
 
 // ========================================
@@ -122,26 +188,30 @@ app.use(express.json());
 app.use(
   express.urlencoded({
     extended: true,
-  }),
+  })
 );
 
 app.use(cookieParser());
 
-app.use(
-  cors({
-    origin: "http://localhost:5173",
+// ========================================
+// EXPRESS CORS
+// ========================================
 
-    credentials: true,
+app.use(cors(corsOptions));
 
-    methods: ["GET", "POST", "PUT", "DELETE"],
-  }),
-);
+// ========================================
+// SECURITY HEADERS
+// ========================================
 
 app.use(
   helmet({
     crossOriginResourcePolicy: false,
-  }),
+  })
 );
+
+// ========================================
+// RATE LIMIT
+// ========================================
 
 app.use(limiter);
 
@@ -220,8 +290,31 @@ app.use("/api/wallet", walletRoutes);
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-
     message: "MultiServe API Running",
+  });
+});
+
+// ========================================
+// HEALTH CHECK
+// ========================================
+
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "MultiServe server is healthy",
+    environment: process.env.NODE_ENV || "development",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// ========================================
+// 404 HANDLER
+// ========================================
+
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Route not found: ${req.method} ${req.originalUrl}`,
   });
 });
 
@@ -230,26 +323,45 @@ app.get("/", (req, res) => {
 // ========================================
 
 app.use((err, req, res, next) => {
-  console.log("SERVER ERROR:", err);
+  console.error("SERVER ERROR:", err);
 
-  res.status(500).json({
+  // CORS error
+  if (err.message === "Not allowed by CORS") {
+    return res.status(403).json({
+      success: false,
+      message: "CORS policy blocked this request.",
+    });
+  }
+
+  res.status(err.status || 500).json({
     success: false,
-
     message: err.message || "Internal Server Error",
   });
 });
 
 // ========================================
+// POSTGRESQL SYNCHRONIZATION
+// ========================================
+
+try {
+  require("./scripts/syncToPostgres");
+  console.log("PostgreSQL synchronization loaded.");
+} catch (error) {
+  console.error(
+    "PostgreSQL synchronization failed to load:",
+    error.message
+  );
+}
+
+// ========================================
 // START SERVER
 // ========================================
-require("./scripts/syncToPostgres");
+
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, () => {
-  console.log(`
-======================================
-🚀 MultiServe Server Running
-🌍 PORT: ${PORT}
-======================================
-  `);
+server.listen(PORT, "0.0.0.0", () => {
+  console.log("====================================");
+  console.log("🚀 MultiServe Server Running");
+  console.log(`🌍 PORT: ${PORT}`);
+  console.log("====================================");
 });
