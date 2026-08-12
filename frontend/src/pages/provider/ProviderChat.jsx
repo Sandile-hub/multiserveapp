@@ -17,7 +17,9 @@ import {
 } from "lucide-react";
 import "../../styles/Provider.css";
 
-const socket = io("http://localhost:5000");
+const socket = io(
+  import.meta.env.VITE_SOCKET_URL
+);
 
 function ProviderChat() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");

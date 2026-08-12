@@ -20,7 +20,9 @@ import {
 } from "lucide-react";
 import "../../styles/Customer.css";
 
-const socket = io("http://localhost:5000");
+const socket = io(
+  import.meta.env.VITE_SOCKET_URL
+);
 
 function CustomerChat() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
