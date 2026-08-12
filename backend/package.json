@@ -1,0 +1,41 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "sync:postgres": "node scripts/syncToPostgres.js",
+    "sync:start": "node scripts/syncToPostgres.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^1.41.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
+    "express-validator": "^7.3.2",
+    "framer-motion": "^12.40.0",
+    "helmet": "^8.2.0",
+    "jsonwebtoken": "^9.0.3",
+    "lucide-react": "^1.16.0",
+    "multer": "^2.1.1",
+    "multer-storage-cloudinary": "^4.0.0",
+    "mysql2": "^3.22.3",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^8.0.11",
+    "pg": "^8.21.0",
+    "socket.io": "^4.8.3",
+    "stripe": "^22.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

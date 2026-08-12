@@ -1,0 +1,275 @@
+/* Container */
+.payment-success-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+/* Card */
+.payment-success-card {
+  max-width: 28rem;
+  width: 100%;
+  background-color: white;
+  border-radius: 1rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.payment-success-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 25px 30px -12px rgba(0, 0, 0, 0.15);
+}
+
+/* Success Animation Header */
+.success-animation-header {
+  position: relative;
+  height: 8rem;
+  background-color: #10b981;
+}
+
+.success-icon-wrapper {
+  position: absolute;
+  bottom: -3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: white;
+  border-radius: 9999px;
+  padding: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.success-icon {
+  width: 4rem;
+  height: 4rem;
+  color: #10b981;
+  animation: scaleIn 0.5s ease-out;
+}
+
+/* Content */
+.payment-success-content {
+  padding: 4rem 1.5rem 2rem 1.5rem;
+  text-align: center;
+}
+
+.success-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+}
+
+.success-message {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+
+/* Order Details */
+.order-details {
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.order-details-title {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.order-details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+}
+
+.detail-label {
+  color: #6b7280;
+}
+
+.detail-value {
+  color: #1f2937;
+}
+
+.order-id {
+  font-family: monospace;
+}
+
+.amount-value {
+  font-weight: 600;
+  color: #10b981;
+}
+
+.transaction-id {
+  font-family: monospace;
+  font-size: 0.75rem;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  font-size: 0.875rem;
+}
+
+.btn-primary {
+  background-color: #10b981;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #059669;
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background-color: white;
+  border: 2px solid #d1d5db;
+  color: #374151;
+}
+
+.btn-secondary:hover {
+  border-color: #10b981;
+  color: #059669;
+  transform: translateY(-1px);
+}
+
+.btn-text {
+  background-color: transparent;
+  color: #6b7280;
+}
+
+.btn-text:hover {
+  color: #374151;
+}
+
+.btn-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Email Notification */
+.email-notification {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 1.5rem;
+}
+
+/* Animations */
+@keyframes scaleIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  80% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .payment-success-card {
+    max-width: 95%;
+  }
+  
+  .payment-success-content {
+    padding: 3rem 1rem 1.5rem 1rem;
+  }
+  
+  .success-title {
+    font-size: 1.25rem;
+  }
+  
+  .detail-row {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .transaction-id {
+    max-width: 100%;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .payment-success-card {
+    background-color: #1f2937;
+  }
+  
+  .success-title {
+    color: #f3f4f6;
+  }
+  
+  .success-message {
+    color: #9ca3af;
+  }
+  
+  .order-details {
+    background-color: #374151;
+  }
+  
+  .order-details-title {
+    color: #e5e7eb;
+  }
+  
+  .detail-label {
+    color: #9ca3af;
+  }
+  
+  .detail-value {
+    color: #f3f4f6;
+  }
+  
+  .btn-secondary {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #f3f4f6;
+  }
+  
+  .btn-text {
+    color: #9ca3af;
+  }
+  
+  .btn-text:hover {
+    color: #e5e7eb;
+  }
+}
