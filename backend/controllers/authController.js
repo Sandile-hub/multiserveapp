@@ -162,7 +162,7 @@ exports.register = async (
     });
 
     res.status(201).json({
-      success: true,
+      success: true, 
 
       message:
         "Account created successfully. OTP sent to email.",
