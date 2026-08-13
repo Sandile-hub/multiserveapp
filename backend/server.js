@@ -343,15 +343,15 @@ app.use((err, req, res, next) => {
 // POSTGRESQL SYNCHRONIZATION
 // ========================================
 
-try {
-  require("./scripts/syncToPostgres");
-  console.log("PostgreSQL synchronization loaded.");
-} catch (error) {
-  console.error(
-    "PostgreSQL synchronization failed to load:",
-    error.message
-  );
-}
+//try {
+//  require("./scripts/syncToPostgres");
+//  console.log("PostgreSQL synchronization loaded.");
+//} catch (error) {
+//  console.error(
+//    "PostgreSQL synchronization failed to load:",
+//    error.message
+//  );
+//}
 
 // ========================================
 // START SERVER
