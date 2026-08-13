@@ -20,11 +20,26 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 
+  requireTLS: true,
+
   connectionTimeout: 30000,
   greetingTimeout: 30000,
-  socketTimeout: 30000,
+  socketTimeout: 60000,
 
   family: 4,
+});
+
+// ========================================
+// VERIFY SMTP CONNECTION
+// ========================================
+
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("❌ EMAIL SMTP CONNECTION FAILED");
+    console.error("EMAIL ERROR:", error);
+  } else {
+    console.log("✅ EMAIL SMTP CONNECTION SUCCESSFUL");
+  }
 });
 
 // ========================================
