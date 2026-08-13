@@ -94,30 +94,32 @@ exports.register = async (
     // CREATE USER
     // ================================
 
-    await db.query(
-      `
-      INSERT INTO users
-      (
-        full_name,
-        email,
-        phone,
-        password,
-        role,
-        email_otp,
-        otp_expires_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-      `,
-      [
-        full_name,
-        email,
-        phone,
-        hashedPassword,
-        role,
-        otp,
-        otpExpiry,
-      ]
-    );
+await db.query(
+  `
+  INSERT INTO users
+  (
+    full_name,
+    email,
+    phone,
+    password,
+    role,
+    email_verified,
+    email_otp,
+    otp_expires_at
+  )
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `,
+  [
+    full_name,
+    email,
+    phone,
+    hashedPassword,
+    role,
+    0,
+    otp,
+    otpExpiry,
+  ]
+);
 
     // ================================
     // SEND OTP EMAIL
@@ -185,12 +187,8 @@ exports.register = async (
 // LOGIN
 // ========================================
 
-exports.login = async (
-  req,
-  res
-) => {
+exports.login = async (req, res) => {
   try {
-
     const {
       email,
       password,
@@ -200,22 +198,18 @@ exports.login = async (
     // FIND USER
     // ================================
 
-    const [users] =
-      await db.query(
-        `
-        SELECT *
-        FROM users
-        WHERE email = ?
-        `,
-        [email]
-      );
+    const [users] = await db.query(
+      `
+      SELECT *
+      FROM users
+      WHERE email = ?
+      `,
+      [email]
+    );
 
-    if (
-      users.length === 0
-    ) {
+    if (users.length === 0) {
       return res.status(400).json({
-        message:
-          "Invalid credentials",
+        message: "Invalid credentials",
       });
     }
 
@@ -225,16 +219,14 @@ exports.login = async (
     // CHECK PASSWORD
     // ================================
 
-    const isMatch =
-      await bcrypt.compare(
-        password,
-        user.password
-      );
+    const isMatch = await bcrypt.compare(
+      password,
+      user.password
+    );
 
     if (!isMatch) {
       return res.status(400).json({
-        message:
-          "Invalid credentials",
+        message: "Invalid credentials",
       });
     }
 
@@ -242,7 +234,7 @@ exports.login = async (
     // CHECK EMAIL VERIFIED
     // ================================
 
-    if (!user.is_verified) {
+    if (!user.email_verified) {
       return res.status(403).json({
         success: false,
 
@@ -260,7 +252,6 @@ exports.login = async (
     const token = jwt.sign(
       {
         id: user.id,
-
         role: user.role,
       },
 
@@ -268,7 +259,7 @@ exports.login = async (
 
       {
         expiresIn:
-          process.env.JWT_EXPIRES_IN,
+          process.env.JWT_EXPIRES_IN || "7d",
       }
     );
 
@@ -276,7 +267,7 @@ exports.login = async (
     // SUCCESS RESPONSE
     // ================================
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
 
       token,
@@ -296,16 +287,21 @@ exports.login = async (
         profile_image:
           user.profile_image,
 
-        is_verified:
-          user.is_verified,
+        email_verified:
+          user.email_verified,
       },
     });
 
   } catch (error) {
 
-    console.log(error);
+    console.error(
+      "LOGIN ERROR:",
+      error
+    );
 
-    res.status(500).json({
+    return res.status(500).json({
+      success: false,
+
       message:
         "Server Error",
     });
@@ -328,6 +324,18 @@ exports.verifyOTP = async (
     } = req.body;
 
     // ================================
+    // VALIDATE INPUT
+    // ================================
+
+    if (!email || !otp) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Email and OTP are required",
+      });
+    }
+
+    // ================================
     // FIND USER
     // ================================
 
@@ -345,6 +353,7 @@ exports.verifyOTP = async (
       users.length === 0
     ) {
       return res.status(404).json({
+        success: false,
         message:
           "User not found",
       });
@@ -353,29 +362,43 @@ exports.verifyOTP = async (
     const user = users[0];
 
     // ================================
-    // INVALID OTP
+    // ALREADY VERIFIED
+    // ================================
+
+    if (Number(user.email_verified) === 1) {
+      return res.status(200).json({
+        success: true,
+        message:
+          "Email is already verified",
+      });
+    }
+
+    // ================================
+    // CHECK OTP
     // ================================
 
     if (
-      user.email_otp !== otp
+      String(user.email_otp) !==
+      String(otp)
     ) {
       return res.status(400).json({
+        success: false,
         message:
           "Invalid OTP",
       });
     }
 
     // ================================
-    // EXPIRED OTP
+    // CHECK OTP EXPIRATION
     // ================================
 
     if (
+      !user.otp_expires_at ||
       new Date() >
-      new Date(
-        user.otp_expires_at
-      )
+        new Date(user.otp_expires_at)
     ) {
       return res.status(400).json({
+        success: false,
         message:
           "OTP expired",
       });
@@ -389,7 +412,7 @@ exports.verifyOTP = async (
       `
       UPDATE users
       SET
-        is_verified = true,
+        email_verified = 1,
         email_otp = NULL,
         otp_expires_at = NULL
       WHERE id = ?
@@ -397,18 +420,25 @@ exports.verifyOTP = async (
       [user.id]
     );
 
-    res.status(200).json({
-      success: true,
+    // ================================
+    // SUCCESS
+    // ================================
 
+    return res.status(200).json({
+      success: true,
       message:
         "Email verified successfully",
     });
 
   } catch (error) {
 
-    console.log(error);
+    console.error(
+      "VERIFY OTP ERROR:",
+      error
+    );
 
-    res.status(500).json({
+    return res.status(500).json({
+      success: false,
       message:
         "Verification failed",
     });

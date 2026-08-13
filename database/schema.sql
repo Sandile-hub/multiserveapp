@@ -554,3 +554,8 @@ CREATE TABLE withdrawals (
   FOREIGN KEY (provider_id)
   REFERENCES users(id)
 );
+
+UPDATE users
+SET email_verified = 1
+WHERE email = 'admin@multiserve.com'
+  AND role = 'admin';
