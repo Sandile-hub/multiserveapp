@@ -4,47 +4,40 @@ const db = require("../config/database");
 // DASHBOARD STATS
 // ============================================
 
-exports.getDashboardStats =
-async (req, res) => {
-
+exports.getDashboardStats = async (req, res) => {
   try {
-
     // =========================
     // TOTAL USERS
     // =========================
 
-    const [[users]] =
-    await db.query(`
+    const [[users]] = await db.query(`
       SELECT COUNT(*) AS totalUsers
       FROM users
-    `)
+    `);
 
     // =========================
     // TOTAL BUSINESSES
     // =========================
 
-    const [[businesses]] =
-    await db.query(`
+    const [[businesses]] = await db.query(`
       SELECT COUNT(*) AS totalBusinesses
       FROM businesses
-    `)
+    `);
 
     // =========================
     // TOTAL BOOKINGS
     // =========================
 
-    const [[bookings]] =
-    await db.query(`
+    const [[bookings]] = await db.query(`
       SELECT COUNT(*) AS totalBookings
       FROM bookings
-    `)
+    `);
 
     // =========================
     // TOTAL REVENUE
     // =========================
 
-    const [[revenue]] =
-    await db.query(`
+    const [[revenue]] = await db.query(`
       SELECT
         COALESCE(
           SUM(amount),
@@ -53,62 +46,57 @@ async (req, res) => {
       FROM payments
       WHERE status =
       'successful'
-    `)
+    `);
 
     // =========================
     // TOTAL PROVIDERS
     // =========================
 
-    const [[providers]] =
-    await db.query(`
+    const [[providers]] = await db.query(`
       SELECT COUNT(*) AS totalProviders
       FROM users
       WHERE role =
       'provider'
-    `)
+    `);
 
     // =========================
     // TOTAL CUSTOMERS
     // =========================
 
-    const [[customers]] =
-    await db.query(`
+    const [[customers]] = await db.query(`
       SELECT COUNT(*) AS totalCustomers
       FROM users
       WHERE role =
       'customer'
-    `)
+    `);
 
     // =========================
     // PENDING BUSINESSES
     // =========================
 
-    const [[pendingBusinesses]] =
-    await db.query(`
+    const [[pendingBusinesses]] = await db.query(`
       SELECT COUNT(*) AS pending
       FROM businesses
       WHERE status =
       'pending'
-    `)
+    `);
 
     // =========================
     // SUCCESSFUL PAYMENTS
     // =========================
 
-    const [[successfulPayments]] =
-    await db.query(`
+    const [[successfulPayments]] = await db.query(`
       SELECT COUNT(*) AS total
       FROM payments
       WHERE status =
       'successful'
-    `)
+    `);
 
     // =========================
     // RECENT BOOKINGS
     // =========================
 
-    const [recentBookings] =
-    await db.query(`
+    const [recentBookings] = await db.query(`
       SELECT
         bookings.id,
         bookings.status,
@@ -142,14 +130,13 @@ async (req, res) => {
       bookings.created_at DESC
 
       LIMIT 5
-    `)
+    `);
 
     // =========================
     // RECENT USERS
     // =========================
 
-    const [recentUsers] =
-    await db.query(`
+    const [recentUsers] = await db.query(`
       SELECT
         id,
         full_name,
@@ -159,14 +146,13 @@ async (req, res) => {
       FROM users
       ORDER BY created_at DESC
       LIMIT 5
-    `)
+    `);
 
     // =========================
     // MONTHLY REVENUE
     // =========================
 
-const [monthlyRevenue] =
-await db.query(`
+    const [monthlyRevenue] = await db.query(`
   SELECT
     MONTH(created_at)
     AS monthNumber,
@@ -189,39 +175,29 @@ await db.query(`
 
   ORDER BY
   monthNumber ASC
-`)
+`);
 
     // =========================
     // RESPONSE
     // =========================
 
     res.status(200).json({
-
       stats: {
+        users: users.totalUsers,
 
-        users:
-          users.totalUsers,
+        providers: providers.totalProviders,
 
-        providers:
-          providers.totalProviders,
+        customers: customers.totalCustomers,
 
-        customers:
-          customers.totalCustomers,
+        businesses: businesses.totalBusinesses,
 
-        businesses:
-          businesses.totalBusinesses,
+        pendingBusinesses: pendingBusinesses.pending,
 
-        pendingBusinesses:
-          pendingBusinesses.pending,
+        bookings: bookings.totalBookings,
 
-        bookings:
-          bookings.totalBookings,
+        revenue: revenue.totalRevenue,
 
-        revenue:
-          revenue.totalRevenue,
-
-        successfulPayments:
-          successfulPayments.total,
+        successfulPayments: successfulPayments.total,
       },
 
       recentBookings,
@@ -229,30 +205,23 @@ await db.query(`
       recentUsers,
 
       monthlyRevenue,
-    })
-
+    });
   } catch (error) {
-
-    console.log(error)
+    console.log(error);
 
     res.status(500).json({
-      message:
-        "Server Error",
-    })
+      message: "Server Error",
+    });
   }
-}
+};
 
 // ============================================
 // USERS
 // ============================================
 
-exports.getAllUsers =
-async (req, res) => {
-
+exports.getAllUsers = async (req, res) => {
   try {
-
-    const [users] =
-    await db.query(`
+    const [users] = await db.query(`
       SELECT
         id,
         full_name,
@@ -263,106 +232,249 @@ async (req, res) => {
         created_at
       FROM users
       ORDER BY created_at DESC
-    `)
+    `);
 
-    res.status(200).json(users)
-
+    res.status(200).json(users);
   } catch (error) {
-
-    console.log(error)
+    console.log(error);
 
     res.status(500).json({
-      message:
-        "Server Error",
-    })
+      message: "Server Error",
+    });
   }
-}
+};
 
 // ============================================
 // UPDATE USER STATUS
 // ============================================
 
-exports.updateUserStatus =
-async (req, res) => {
-
+exports.updateUserStatus = async (req, res) => {
   try {
+    const { id } = req.params;
 
-    const { id } =
-    req.params
+    const { is_active } = req.body;
 
-    const {
-      is_active,
-    } = req.body
-
-    await db.query(`
+    await db.query(
+      `
       UPDATE users
       SET is_active = ?
       WHERE id = ?
-    `, [
-      is_active,
-      id,
-    ])
+    `,
+      [is_active, id],
+    );
 
     res.status(200).json({
-      message:
-        "User updated successfully",
-    })
-
+      message: "User updated successfully",
+    });
   } catch (error) {
-
-    console.log(error)
+    console.log(error);
 
     res.status(500).json({
-      message:
-        "Server Error",
-    })
+      message: "Server Error",
+    });
   }
-}
+};
 
 // ============================================
 // DELETE USER
+// PRODUCTION SAFE VERSION
 // ============================================
 
-exports.deleteUser =
-async (req, res) => {
+exports.deleteUser = async (req, res) => {
+  const userId = Number(req.params.id);
 
   try {
+    // ========================================
+    // VALIDATE USER ID
+    // ========================================
 
-    const { id } =
-    req.params
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user ID.",
+      });
+    }
 
-    await db.query(`
+    // ========================================
+    // PREVENT ADMIN FROM DELETING THEMSELVES
+    // ========================================
+
+    if (userId === Number(req.user.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "You cannot delete your own admin account.",
+      });
+    }
+
+    // ========================================
+    // CHECK USER EXISTS
+    // ========================================
+
+    const [users] = await db.query(
+      `
+      SELECT
+        id,
+        full_name,
+        email,
+        role,
+        is_active
+      FROM users
+      WHERE id = ?
+      LIMIT 1
+      `,
+      [userId],
+    );
+
+    if (!users || users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    const user = users[0];
+
+    // ========================================
+    // PREVENT DELETING ADMIN ACCOUNTS
+    // ========================================
+
+    if (user.role === "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Admin accounts cannot be deleted.",
+      });
+    }
+
+    // ========================================
+    // DELETE WALLET TRANSACTIONS
+    //
+    // FK:
+    // wallet_transactions.user_id
+    // -> users.id
+    //
+    // DELETE RULE: NO ACTION
+    // ========================================
+
+    await db.query(
+      `
+      DELETE FROM wallet_transactions
+      WHERE user_id = ?
+      `,
+      [userId],
+    );
+
+    // ========================================
+    // DELETE WITHDRAWALS
+    //
+    // FK:
+    // withdrawals.provider_id
+    // -> users.id
+    //
+    // DELETE RULE: NO ACTION
+    // ========================================
+
+    await db.query(
+      `
+      DELETE FROM withdrawals
+      WHERE provider_id = ?
+      `,
+      [userId],
+    );
+
+    // ========================================
+    // DELETE USER
+    //
+    // The following tables currently have
+    // ON DELETE CASCADE according to your
+    // production database:
+    //
+    // bookings
+    // businesses
+    // favorites
+    // notifications
+    // provider_availability
+    // reviews
+    //
+    // ========================================
+
+    const [deleteResult] = await db.query(
+      `
       DELETE FROM users
       WHERE id = ?
-    `, [id])
+      `,
+      [userId],
+    );
 
-    res.status(200).json({
-      message:
-        "User deleted successfully",
-    })
+    // ========================================
+    // VERIFY DELETE
+    // ========================================
 
+    if (!deleteResult || deleteResult.affectedRows === 0) {
+      return res.status(500).json({
+        success: false,
+        message: "User could not be deleted.",
+      });
+    }
+
+    // ========================================
+    // SUCCESS
+    // ========================================
+
+    console.log(`ADMIN USER DELETED: ${user.email} (ID: ${userId})`);
+
+    return res.status(200).json({
+      success: true,
+      message: "User deleted successfully.",
+      deletedUser: {
+        id: user.id,
+        full_name: user.full_name,
+        email: user.email,
+        role: user.role,
+      },
+    });
   } catch (error) {
+    // ========================================
+    // ERROR
+    // ========================================
 
-    console.log(error)
+    console.error("DELETE USER ERROR:", {
+      message: error.message,
+      code: error.code,
+      errno: error.errno,
+      sqlState: error.sqlState,
+    });
 
-    res.status(500).json({
-      message:
-        "Server Error",
-    })
+    // ========================================
+    // FOREIGN KEY ERROR
+    // ========================================
+
+    if (error.code === "ER_ROW_IS_REFERENCED_2") {
+      return res.status(409).json({
+        success: false,
+        message:
+          "This user cannot be deleted because other records still depend on this account.",
+        errorCode: error.code,
+      });
+    }
+
+    // ========================================
+    // DEFAULT ERROR
+    // ========================================
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete user.",
+    });
   }
-}
+};
 
 // ============================================
 // BOOKINGS
 // ============================================
 
-exports.getAllBookings =
-async (req, res) => {
-
+exports.getAllBookings = async (req, res) => {
   try {
-
-    const [bookings] =
-    await db.query(`
+    const [bookings] = await db.query(`
       SELECT
         bookings.*,
 
@@ -389,34 +501,25 @@ async (req, res) => {
 
       ORDER BY
       bookings.created_at DESC
-    `)
+    `);
 
-    res.status(200).json(
-      bookings
-    )
-
+    res.status(200).json(bookings);
   } catch (error) {
-
-    console.log(error)
+    console.log(error);
 
     res.status(500).json({
-      message:
-        "Server Error",
-    })
+      message: "Server Error",
+    });
   }
-}
+};
 
 // ============================================
 // PAYMENTS
 // ============================================
 
-exports.getAllPayments =
-async (req, res) => {
-
+exports.getAllPayments = async (req, res) => {
   try {
-
-    const [payments] =
-    await db.query(`
+    const [payments] = await db.query(`
       SELECT
         payments.*,
 
@@ -441,34 +544,25 @@ async (req, res) => {
 
       ORDER BY
       payments.created_at DESC
-    `)
+    `);
 
-    res.status(200).json(
-      payments
-    )
-
+    res.status(200).json(payments);
   } catch (error) {
-
-    console.log(error)
+    console.log(error);
 
     res.status(500).json({
-      message:
-        "Server Error",
-    })
+      message: "Server Error",
+    });
   }
-}
+};
 
 // ============================================
 // REVIEWS
 // ============================================
 
-exports.getAllReviews =
-async (req, res) => {
-
+exports.getAllReviews = async (req, res) => {
   try {
-
-    const [reviews] =
-    await db.query(`
+    const [reviews] = await db.query(`
       SELECT
         reviews.*,
 
@@ -489,65 +583,47 @@ async (req, res) => {
 
       ORDER BY
       reviews.created_at DESC
-    `)
+    `);
 
-    res.status(200).json(
-      reviews
-    )
-
+    res.status(200).json(reviews);
   } catch (error) {
-
-    console.log(error)
+    console.log(error);
 
     res.status(500).json({
-      message:
-        "Server Error",
-    })
+      message: "Server Error",
+    });
   }
-}
+};
 
 // ============================================
 // NOTIFICATIONS
 // ============================================
 
-exports.getAllNotifications =
-async (req, res) => {
-
+exports.getAllNotifications = async (req, res) => {
   try {
-
-    const [notifications] =
-    await db.query(`
+    const [notifications] = await db.query(`
       SELECT *
       FROM notifications
       ORDER BY created_at DESC
-    `)
+    `);
 
-    res.status(200).json(
-      notifications
-    )
-
+    res.status(200).json(notifications);
   } catch (error) {
-
-    console.log(error)
+    console.log(error);
 
     res.status(500).json({
-      message:
-        "Server Error",
-    })
+      message: "Server Error",
+    });
   }
-}
+};
 
 // ============================================
 // BUSINESSES
 // ============================================
 
-exports.getAllBusinesses =
-async (req, res) => {
-
+exports.getAllBusinesses = async (req, res) => {
   try {
-
-    const [businesses] =
-    await db.query(`
+    const [businesses] = await db.query(`
       SELECT
         businesses.*,
 
@@ -565,167 +641,126 @@ async (req, res) => {
 
       ORDER BY
       businesses.created_at DESC
-    `)
+    `);
 
-    res.status(200).json(
-      businesses
-    )
-
+    res.status(200).json(businesses);
   } catch (error) {
-
-    console.log(error)
+    console.log(error);
 
     res.status(500).json({
-      message:
-        "Server Error",
-    })
+      message: "Server Error",
+    });
   }
-}
+};
 
 // ============================================
 // APPROVE BUSINESS
 // ============================================
 
-exports.approveBusiness =
-async (req, res) => {
-
+exports.approveBusiness = async (req, res) => {
   try {
+    const { id } = req.params;
 
-    const { id } =
-    req.params
-
-    await db.query(`
+    await db.query(
+      `
       UPDATE businesses
       SET
         status = 'approved',
         verified_at = NOW()
       WHERE id = ?
-    `, [id])
+    `,
+      [id],
+    );
 
     res.status(200).json({
-      message:
-        "Business approved successfully",
-    })
-
+      message: "Business approved successfully",
+    });
   } catch (error) {
-
-    console.log(error)
+    console.log(error);
 
     res.status(500).json({
-      message:
-        "Server Error",
-    })
+      message: "Server Error",
+    });
   }
-}
+};
 
 // ============================================
 // REJECT BUSINESS
 // ============================================
 
-exports.rejectBusiness =
-async (req, res) => {
-
+exports.rejectBusiness = async (req, res) => {
   try {
+    const { id } = req.params;
 
-    const { id } =
-    req.params
+    const { rejection_reason } = req.body;
 
-    const {
-      rejection_reason,
-    } = req.body
-
-    await db.query(`
+    await db.query(
+      `
       UPDATE businesses
       SET
         status = 'rejected',
         rejection_reason = ?
       WHERE id = ?
-    `, [
-      rejection_reason,
-      id,
-    ])
+    `,
+      [rejection_reason, id],
+    );
 
     res.status(200).json({
-      message:
-        "Business rejected successfully",
-    })
-
+      message: "Business rejected successfully",
+    });
   } catch (error) {
-
-    console.log(error)
+    console.log(error);
 
     res.status(500).json({
-      message:
-        "Server Error",
-    })
+      message: "Server Error",
+    });
   }
-}
+};
 
 // ============================================
 // SETTINGS
 // ============================================
 
-exports.getPlatformSettings =
-async (req, res) => {
-
+exports.getPlatformSettings = async (req, res) => {
   try {
-
     res.status(200).json({
+      platform_name: "MultiServe",
 
-      platform_name:
-        "MultiServe",
+      support_email: "support@multiserve.com",
 
-      support_email:
-        "support@multiserve.com",
+      currency: "ZAR",
 
-      currency:
-        "ZAR",
+      timezone: "Africa/Johannesburg",
 
-      timezone:
-        "Africa/Johannesburg",
+      maintenance_mode: false,
 
-      maintenance_mode:
-        false,
+      enable_notifications: true,
 
-      enable_notifications:
-        true,
-
-      enable_reviews:
-        true,
-    })
-
+      enable_reviews: true,
+    });
   } catch (error) {
-
-    console.log(error)
+    console.log(error);
 
     res.status(500).json({
-      message:
-        "Server Error",
-    })
+      message: "Server Error",
+    });
   }
-}
+};
 
 // ============================================
 // UPDATE SETTINGS
 // ============================================
 
-exports.updatePlatformSettings =
-async (req, res) => {
-
+exports.updatePlatformSettings = async (req, res) => {
   try {
-
     res.status(200).json({
-      message:
-        "Settings updated successfully",
-    })
-
+      message: "Settings updated successfully",
+    });
   } catch (error) {
-
-    console.log(error)
+    console.log(error);
 
     res.status(500).json({
-      message:
-        "Server Error",
-    })
+      message: "Server Error",
+    });
   }
-}
+};

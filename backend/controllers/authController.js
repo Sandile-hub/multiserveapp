@@ -10,56 +10,40 @@ const nodemailer = require("nodemailer");
 // EMAIL TRANSPORTER
 // ========================================
 
-const transporter =
-  nodemailer.createTransport({
-    service: "gmail",
+const transporter = nodemailer.createTransport({
+  service: "gmail",
 
-    auth: {
-      user:
-        process.env.EMAIL_USER,
+  auth: {
+    user: process.env.EMAIL_USER,
 
-      pass:
-        process.env.EMAIL_PASS,
-    },
-  });
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
 // ========================================
 // REGISTER
 // ========================================
 
-exports.register = async (
-  req,
-  res
-) => {
+exports.register = async (req, res) => {
   try {
-    const {
-      full_name,
-      email,
-      phone,
-      password,
-      role,
-    } = req.body;
+    const { full_name, email, phone, password, role } = req.body;
 
     // ================================
     // CHECK EXISTING USER
     // ================================
 
-    const [existingUser] =
-      await db.query(
-        `
+    const [existingUser] = await db.query(
+      `
         SELECT *
         FROM users
         WHERE email = ?
         `,
-        [email]
-      );
+      [email],
+    );
 
-    if (
-      existingUser.length > 0
-    ) {
+    if (existingUser.length > 0) {
       return res.status(400).json({
-        message:
-          "Email already exists",
+        message: "Email already exists",
       });
     }
 
@@ -67,35 +51,23 @@ exports.register = async (
     // HASH PASSWORD
     // ================================
 
-    const hashedPassword =
-      await bcrypt.hash(
-        password,
-        10
-      );
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // ================================
     // GENERATE OTP
     // ================================
 
-    const otp =
-      Math.floor(
-        100000 +
-        Math.random() * 900000
-      ).toString();
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     // OTP EXPIRES IN 10 MINUTES
-    const otpExpiry =
-      new Date(
-        Date.now() +
-        10 * 60 * 1000
-      );
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
     // ================================
     // CREATE USER
     // ================================
 
-await db.query(
-  `
+    await db.query(
+      `
   INSERT INTO users
   (
     full_name,
@@ -109,30 +81,19 @@ await db.query(
   )
   VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `,
-  [
-    full_name,
-    email,
-    phone,
-    hashedPassword,
-    role,
-    0,
-    otp,
-    otpExpiry,
-  ]
-);
+      [full_name, email, phone, hashedPassword, role, 0, otp, otpExpiry],
+    );
 
     // ================================
     // SEND OTP EMAIL
     // ================================
 
     await transporter.sendMail({
-      from:
-        process.env.EMAIL_USER,
+      from: process.env.EMAIL_USER,
 
       to: email,
 
-      subject:
-        "MultiServe Email Verification OTP",
+      subject: "MultiServe Email Verification OTP",
 
       html: `
         <div style="
@@ -164,21 +125,17 @@ await db.query(
     });
 
     res.status(201).json({
-      success: true, 
+      success: true,
 
-      message:
-        "Account created successfully. OTP sent to email.",
+      message: "Account created successfully. OTP sent to email.",
 
       email,
     });
-
   } catch (error) {
-
     console.log(error);
 
     res.status(500).json({
-      message:
-        "Server Error",
+      message: "Server Error",
     });
   }
 };
@@ -189,10 +146,7 @@ await db.query(
 
 exports.login = async (req, res) => {
   try {
-    const {
-      email,
-      password,
-    } = req.body;
+    const { email, password } = req.body;
 
     // ================================
     // FIND USER
@@ -204,7 +158,7 @@ exports.login = async (req, res) => {
       FROM users
       WHERE email = ?
       `,
-      [email]
+      [email],
     );
 
     if (users.length === 0) {
@@ -219,10 +173,7 @@ exports.login = async (req, res) => {
     // CHECK PASSWORD
     // ================================
 
-    const isMatch = await bcrypt.compare(
-      password,
-      user.password
-    );
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.status(400).json({
@@ -238,8 +189,7 @@ exports.login = async (req, res) => {
       return res.status(403).json({
         success: false,
 
-        message:
-          "Please verify your email with OTP first",
+        message: "Please verify your email with OTP first",
 
         email: user.email,
       });
@@ -258,9 +208,8 @@ exports.login = async (req, res) => {
       process.env.JWT_SECRET,
 
       {
-        expiresIn:
-          process.env.JWT_EXPIRES_IN || "7d",
-      }
+        expiresIn: process.env.JWT_EXPIRES_IN || "7d",
+      },
     );
 
     // ================================
@@ -275,35 +224,24 @@ exports.login = async (req, res) => {
       user: {
         id: user.id,
 
-        full_name:
-          user.full_name,
+        full_name: user.full_name,
 
-        email:
-          user.email,
+        email: user.email,
 
-        role:
-          user.role,
+        role: user.role,
 
-        profile_image:
-          user.profile_image,
+        profile_image: user.profile_image,
 
-        email_verified:
-          user.email_verified,
+        email_verified: user.email_verified,
       },
     });
-
   } catch (error) {
-
-    console.error(
-      "LOGIN ERROR:",
-      error
-    );
+    console.error("LOGIN ERROR:", error);
 
     return res.status(500).json({
       success: false,
 
-      message:
-        "Server Error",
+      message: "Server Error",
     });
   }
 };
@@ -312,16 +250,9 @@ exports.login = async (req, res) => {
 // VERIFY OTP
 // ========================================
 
-exports.verifyOTP = async (
-  req,
-  res
-) => {
+exports.verifyOTP = async (req, res) => {
   try {
-
-    const {
-      email,
-      otp,
-    } = req.body;
+    const { email, otp } = req.body;
 
     // ================================
     // VALIDATE INPUT
@@ -330,8 +261,7 @@ exports.verifyOTP = async (
     if (!email || !otp) {
       return res.status(400).json({
         success: false,
-        message:
-          "Email and OTP are required",
+        message: "Email and OTP are required",
       });
     }
 
@@ -339,23 +269,19 @@ exports.verifyOTP = async (
     // FIND USER
     // ================================
 
-    const [users] =
-      await db.query(
-        `
+    const [users] = await db.query(
+      `
         SELECT *
         FROM users
         WHERE email = ?
         `,
-        [email]
-      );
+      [email],
+    );
 
-    if (
-      users.length === 0
-    ) {
+    if (users.length === 0) {
       return res.status(404).json({
         success: false,
-        message:
-          "User not found",
+        message: "User not found",
       });
     }
 
@@ -368,8 +294,7 @@ exports.verifyOTP = async (
     if (Number(user.email_verified) === 1) {
       return res.status(200).json({
         success: true,
-        message:
-          "Email is already verified",
+        message: "Email is already verified",
       });
     }
 
@@ -377,14 +302,10 @@ exports.verifyOTP = async (
     // CHECK OTP
     // ================================
 
-    if (
-      String(user.email_otp) !==
-      String(otp)
-    ) {
+    if (String(user.email_otp) !== String(otp)) {
       return res.status(400).json({
         success: false,
-        message:
-          "Invalid OTP",
+        message: "Invalid OTP",
       });
     }
 
@@ -392,15 +313,10 @@ exports.verifyOTP = async (
     // CHECK OTP EXPIRATION
     // ================================
 
-    if (
-      !user.otp_expires_at ||
-      new Date() >
-        new Date(user.otp_expires_at)
-    ) {
+    if (!user.otp_expires_at || new Date() > new Date(user.otp_expires_at)) {
       return res.status(400).json({
         success: false,
-        message:
-          "OTP expired",
+        message: "OTP expired",
       });
     }
 
@@ -417,7 +333,7 @@ exports.verifyOTP = async (
         otp_expires_at = NULL
       WHERE id = ?
       `,
-      [user.id]
+      [user.id],
     );
 
     // ================================
@@ -426,21 +342,14 @@ exports.verifyOTP = async (
 
     return res.status(200).json({
       success: true,
-      message:
-        "Email verified successfully",
+      message: "Email verified successfully",
     });
-
   } catch (error) {
-
-    console.error(
-      "VERIFY OTP ERROR:",
-      error
-    );
+    console.error("VERIFY OTP ERROR:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Verification failed",
+      message: "Verification failed",
     });
   }
 };
@@ -449,35 +358,26 @@ exports.verifyOTP = async (
 // RESEND OTP
 // ========================================
 
-exports.resendOTP = async (
-  req,
-  res
-) => {
+exports.resendOTP = async (req, res) => {
   try {
-
-    const { email } =
-      req.body;
+    const { email } = req.body;
 
     // ================================
     // FIND USER
     // ================================
 
-    const [users] =
-      await db.query(
-        `
+    const [users] = await db.query(
+      `
         SELECT *
         FROM users
         WHERE email = ?
         `,
-        [email]
-      );
+      [email],
+    );
 
-    if (
-      users.length === 0
-    ) {
+    if (users.length === 0) {
       return res.status(404).json({
-        message:
-          "User not found",
+        message: "User not found",
       });
     }
 
@@ -487,17 +387,9 @@ exports.resendOTP = async (
     // GENERATE NEW OTP
     // ================================
 
-    const otp =
-      Math.floor(
-        100000 +
-        Math.random() * 900000
-      ).toString();
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    const otpExpiry =
-      new Date(
-        Date.now() +
-        10 * 60 * 1000
-      );
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
     // ================================
     // UPDATE OTP
@@ -511,11 +403,7 @@ exports.resendOTP = async (
         otp_expires_at = ?
       WHERE id = ?
       `,
-      [
-        otp,
-        otpExpiry,
-        user.id,
-      ]
+      [otp, otpExpiry, user.id],
     );
 
     // ================================
@@ -523,13 +411,11 @@ exports.resendOTP = async (
     // ================================
 
     await transporter.sendMail({
-      from:
-        process.env.EMAIL_USER,
+      from: process.env.EMAIL_USER,
 
       to: email,
 
-      subject:
-        "MultiServe OTP Code",
+      subject: "MultiServe OTP Code",
 
       html: `
         <div style="
@@ -558,17 +444,13 @@ exports.resendOTP = async (
     res.status(200).json({
       success: true,
 
-      message:
-        "OTP resent successfully",
+      message: "OTP resent successfully",
     });
-
   } catch (error) {
-
     console.log(error);
 
     res.status(500).json({
-      message:
-        "Failed to resend OTP",
+      message: "Failed to resend OTP",
     });
   }
 };
