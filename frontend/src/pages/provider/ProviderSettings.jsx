@@ -21,6 +21,8 @@ import {
 import "../../styles/Provider.css";
 
 function ProviderSettings() {
+  const [sidebarOpen, setSidebarOpen] =
+  useState(false)
   const [loading, setLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -116,10 +118,21 @@ function ProviderSettings() {
 
   return (
     <div className="provider-dashboard">
-      <ProviderSidebar />
+      <ProviderSidebar
+  isOpen={sidebarOpen}
+  onClose={() =>
+    setSidebarOpen(false)
+  }
+/>
 
       <div className="provider-main">
-        <ProviderNavbar />
+        <ProviderNavbar
+  toggleSidebar={() =>
+    setSidebarOpen(
+      (previous) => !previous
+    )
+  }
+/>
 
         <div className="provider-main-content">
           {/* HERO SECTION */}

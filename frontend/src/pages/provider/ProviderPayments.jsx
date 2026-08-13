@@ -27,6 +27,9 @@ import "../../styles/Provider.css";
 function ProviderPayments() {
   const [payments, setPayments] = useState([]);
 
+  const [sidebarOpen, setSidebarOpen] =
+  useState(false)
+
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -197,10 +200,21 @@ function ProviderPayments() {
 
   return (
     <div className="provider-dashboard">
-      <ProviderSidebar />
+      <ProviderSidebar
+  isOpen={sidebarOpen}
+  onClose={() =>
+    setSidebarOpen(false)
+  }
+/>
 
       <div className="provider-main">
-        <ProviderNavbar />
+        <ProviderNavbar
+  toggleSidebar={() =>
+    setSidebarOpen(
+      (previous) => !previous
+    )
+  }
+/>
 
         <div className="provider-main-content">
           {/* HERO */}

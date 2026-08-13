@@ -45,6 +45,9 @@ function ProviderProfile() {
 
   const [user, setUser] = useState(storedUser);
 
+  const [sidebarOpen, setSidebarOpen] =
+  useState(false)
+
   const [loading, setLoading] = useState(false);
 
   const [pageLoading, setPageLoading] = useState(true);
@@ -250,10 +253,21 @@ function ProviderProfile() {
 
   return (
     <div className="provider-dashboard">
-      <ProviderSidebar />
+      <ProviderSidebar
+  isOpen={sidebarOpen}
+  onClose={() =>
+    setSidebarOpen(false)
+  }
+/>
 
       <div className="provider-main">
-        <ProviderNavbar />
+        <ProviderNavbar
+  toggleSidebar={() =>
+    setSidebarOpen(
+      (previous) => !previous
+    )
+  }
+/>
 
         <div className="provider-main-content">
           {/* HERO SECTION */}

@@ -18,6 +18,8 @@ import {
 import "../../styles/Provider.css";
 
 function ProviderNotifications() {
+  const [sidebarOpen, setSidebarOpen] =
+  useState(false)
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -106,10 +108,21 @@ function ProviderNotifications() {
 
   return (
     <div className="provider-dashboard">
-      <ProviderSidebar />
+      <ProviderSidebar
+  isOpen={sidebarOpen}
+  onClose={() =>
+    setSidebarOpen(false)
+  }
+/>
 
       <div className="provider-main">
-        <ProviderNavbar />
+        <ProviderNavbar
+  toggleSidebar={() =>
+    setSidebarOpen(
+      (previous) => !previous
+    )
+  }
+/>
 
         <div className="provider-main-content">
           {/* HERO SECTION */}

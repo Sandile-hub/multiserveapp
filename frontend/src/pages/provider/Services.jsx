@@ -15,6 +15,7 @@ import {
 import "../../styles/Provider.css";
 
 function Services() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [services, setServices] = useState([]);
   const [business, setBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -123,12 +124,23 @@ function Services() {
   return (
     <div className="provider-dashboard">
       {/* SIDEBAR */}
-      <ProviderSidebar />
+      <ProviderSidebar
+  isOpen={sidebarOpen}
+  onClose={() =>
+    setSidebarOpen(false)
+  }
+/>
 
       {/* MAIN CONTENT */}
       <div className="provider-main">
         {/* NAVBAR */}
-        <ProviderNavbar />
+        <ProviderNavbar
+  toggleSidebar={() =>
+    setSidebarOpen(
+      (previous) => !previous
+    )
+  }
+/>
 
         {/* CONTENT */}
         <div className="provider-main-content">

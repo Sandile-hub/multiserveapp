@@ -27,6 +27,8 @@ function CreateBusiness() {
     business_phone: "",
     business_email: "",
   });
+  const [sidebarOpen, setSidebarOpen] =
+  useState(false)
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
@@ -72,12 +74,23 @@ function CreateBusiness() {
   return (
     <div className="provider-dashboard">
       {/* SIDEBAR */}
-      <ProviderSidebar />
+      <ProviderSidebar
+  isOpen={sidebarOpen}
+  onClose={() =>
+    setSidebarOpen(false)
+  }
+/>
 
       {/* MAIN CONTENT */}
       <div className="provider-main">
         {/* NAVBAR */}
-        <ProviderNavbar />
+        <ProviderNavbar
+  toggleSidebar={() =>
+    setSidebarOpen(
+      (previous) => !previous
+    )
+  }
+/>
 
         {/* CONTENT */}
         <div className="provider-main-content">

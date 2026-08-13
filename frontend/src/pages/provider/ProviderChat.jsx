@@ -25,6 +25,8 @@ function ProviderChat() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   // STATES
+  const [sidebarOpen, setSidebarOpen] =
+  useState(false)
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [selectedChat, setSelectedChat] = useState(null);
@@ -180,10 +182,21 @@ const fetchChats = async () => {
 
   return (
     <div className="provider-dashboard">
-      <ProviderSidebar />
+      <ProviderSidebar
+  isOpen={sidebarOpen}
+  onClose={() =>
+    setSidebarOpen(false)
+  }
+/>
 
       <div className="provider-main">
-        <ProviderNavbar />
+        <ProviderNavbar
+  toggleSidebar={() =>
+    setSidebarOpen(
+      (previous) => !previous
+    )
+  }
+/>
 
         <div className="provider-main-content chat-page">
           {/* HERO SECTION */}

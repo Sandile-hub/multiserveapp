@@ -15,6 +15,8 @@ import {
 import "../../styles/Provider.css";
 
 function Reviews() {
+  const [sidebarOpen, setSidebarOpen] =
+  useState(false)
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -78,10 +80,21 @@ function Reviews() {
 
   return (
     <div className="provider-dashboard">
-      <ProviderSidebar />
+      <ProviderSidebar
+  isOpen={sidebarOpen}
+  onClose={() =>
+    setSidebarOpen(false)
+  }
+/>
 
       <div className="provider-main">
-        <ProviderNavbar />
+        <ProviderNavbar
+  toggleSidebar={() =>
+    setSidebarOpen(
+      (previous) => !previous
+    )
+  }
+/>
 
         <div className="provider-main-content">
           {/* HERO SECTION */}

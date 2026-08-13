@@ -24,15 +24,14 @@ import API from "../../api/axios"
 
 import "../../styles/Provider.css"
 
+
 function ProviderNavbar({
-  toggleSidebar,
+  toggleSidebar = () => {},
 }) {
 
-  const navigate =
-    useNavigate()
+  const navigate = useNavigate()
 
-  const dropdownRef =
-    useRef(null)
+  const dropdownRef = useRef(null)
 
   const [showMenu, setShowMenu] =
     useState(false)
@@ -42,6 +41,7 @@ function ProviderNavbar({
 
   const [search, setSearch] =
     useState("")
+
 
   // ========================================
   // SAFE USER PARSING
@@ -56,11 +56,12 @@ function ProviderNavbar({
 
     if (
       userData &&
-      userData !== "undefined"
+      userData !== "undefined" &&
+      userData !== "null"
     ) {
 
-      user =
-        JSON.parse(userData)
+      user = JSON.parse(userData)
+
     }
 
   } catch (error) {
@@ -71,34 +72,71 @@ function ProviderNavbar({
     )
 
     localStorage.removeItem("user")
+
   }
+
 
   // ========================================
   // FETCH NOTIFICATIONS
   // ========================================
 
   const fetchNotifications =
-  async () => {
+    async () => {
 
-    try {
+      try {
 
-      const res =
-      await API.get(
-        "/notifications"
-      )
+        const res =
+          await API.get(
+            "/notifications"
+          )
 
-      setNotifications(
-        res.data.notifications || []
-      )
+        const data = res.data
 
-    } catch (error) {
+        /*
+         * Support both:
+         *
+         * {
+         *   notifications: [...]
+         * }
+         *
+         * and:
+         *
+         * [...]
+         */
 
-      console.error(
-        "Error fetching notifications:",
-        error
-      )
+        if (Array.isArray(data)) {
+
+          setNotifications(data)
+
+        } else if (
+          Array.isArray(
+            data?.notifications
+          )
+        ) {
+
+          setNotifications(
+            data.notifications
+          )
+
+        } else {
+
+          setNotifications([])
+
+        }
+
+      } catch (error) {
+
+        console.error(
+          "Error fetching notifications:",
+          error
+        )
+
+        setNotifications([])
+
+      }
+
     }
-  }
+
 
   useEffect(() => {
 
@@ -106,32 +144,35 @@ function ProviderNavbar({
 
   }, [])
 
+
   // ========================================
-  // CLOSE DROPDOWN
+  // CLOSE PROFILE DROPDOWN
   // ========================================
 
   useEffect(() => {
 
     const handleClickOutside =
-    (event) => {
+      (event) => {
 
-      if (
+        if (
+          dropdownRef.current &&
+          !dropdownRef.current.contains(
+            event.target
+          )
+        ) {
 
-        dropdownRef.current &&
+          setShowMenu(false)
 
-        !dropdownRef.current.contains(
-          event.target
-        )
-      ) {
+        }
 
-        setShowMenu(false)
       }
-    }
+
 
     document.addEventListener(
       "mousedown",
       handleClickOutside
     )
+
 
     return () => {
 
@@ -139,9 +180,11 @@ function ProviderNavbar({
         "mousedown",
         handleClickOutside
       )
+
     }
 
   }, [])
+
 
   // ========================================
   // LOGOUT
@@ -158,203 +201,328 @@ function ProviderNavbar({
     )
 
     navigate("/login")
+
   }
+
 
   // ========================================
   // UNREAD NOTIFICATIONS
   // ========================================
 
   const unreadCount =
-    notifications.filter(
-      (notification) =>
-        !notification.is_read
-    ).length
+    Array.isArray(notifications)
+      ? notifications.filter(
+          (notification) =>
+            !notification.is_read
+        ).length
+      : 0
+
 
   // ========================================
   // SEARCH
   // ========================================
 
-  const handleSearch = (e) => {
+  const handleSearch =
+    (e) => {
 
-    if (
-      e.key === "Enter" &&
-      search.trim()
-    ) {
+      if (
+        e.key === "Enter" &&
+        search.trim()
+      ) {
 
-      navigate(
-        `/provider/search?q=${search}`
-      )
+        navigate(
+          `/provider/search?q=${encodeURIComponent(
+            search.trim()
+          )}`
+        )
+
+      }
+
     }
-  }
+
+
+  // ========================================
+  // RENDER
+  // ========================================
 
   return (
 
-    <header className="provider-navbar">
+    <header className="
+      provider-navbar
+    ">
 
-      <div className="provider-navbar-container">
+      <div className="
+        provider-navbar-container
+      ">
 
-        {/* LEFT SECTION */}
 
-        <div className="provider-navbar-left">
+        {/* ==================================
+            LEFT SECTION
+        ================================== */}
+
+        <div className="
+          provider-navbar-left
+        ">
+
 
           {/* MOBILE MENU */}
 
           <button
+            type="button"
             onClick={toggleSidebar}
-            className="provider-mobile-menu"
+            className="
+              provider-mobile-menu
+            "
+            aria-label="Open provider sidebar"
+            title="Open menu"
           >
 
             <Menu size={22} />
 
           </button>
 
+
           {/* TITLE */}
 
           <div>
 
-            <div className="provider-workspace-badge">
+            <div className="
+              provider-workspace-badge
+            ">
 
               <CalendarDays
                 size={16}
-                className="provider-workspace-icon"
+                className="
+                  provider-workspace-icon
+                "
               />
 
-              <span className="provider-workspace-text">
+              <span className="
+                provider-workspace-text
+              ">
                 Provider Workspace
               </span>
+
             </div>
 
-            <h1 className="provider-title">
+
+            <h1 className="
+              provider-title
+            ">
               Dashboard
             </h1>
 
           </div>
+
         </div>
 
-        {/* RIGHT SECTION */}
 
-        <div className="provider-navbar-right">
+        {/* ==================================
+            RIGHT SECTION
+        ================================== */}
+
+        <div className="
+          provider-navbar-right
+        ">
+
 
           {/* SEARCH */}
 
-          <div className="provider-search-wrapper">
+          <div className="
+            provider-search-wrapper
+          ">
 
-            <Search className="provider-search-icon" />
+            <Search
+              className="
+                provider-search-icon
+              "
+            />
 
             <input
               type="text"
               value={search}
               onChange={(e) =>
-                setSearch(e.target.value)
+                setSearch(
+                  e.target.value
+                )
               }
               onKeyDown={handleSearch}
-              placeholder="Search bookings, services..."
-              className="provider-search-input"
+              placeholder="
+                Search bookings, services...
+              "
+              className="
+                provider-search-input
+              "
             />
+
           </div>
+
 
           {/* NOTIFICATIONS */}
 
           <Link
             to="/provider/notifications"
-            className="provider-notification-btn"
+            className="
+              provider-notification-btn
+            "
+            aria-label="Notifications"
           >
 
             <Bell size={22} />
 
             {unreadCount > 0 && (
 
-              <div className="provider-notification-badge">
+              <div className="
+                provider-notification-badge
+              ">
 
                 {unreadCount > 99
                   ? "99+"
                   : unreadCount}
 
               </div>
+
             )}
+
           </Link>
+
 
           {/* PROFILE */}
 
           <div
             ref={dropdownRef}
-            className="provider-profile-dropdown"
+            className="
+              provider-profile-dropdown
+            "
           >
 
             <button
+              type="button"
               onClick={() =>
-                setShowMenu(!showMenu)
+                setShowMenu(
+                  !showMenu
+                )
               }
-              className="provider-profile-btn"
+              className="
+                provider-profile-btn
+              "
+              aria-expanded={showMenu}
             >
+
 
               {/* AVATAR */}
 
-              <div className="provider-profile-avatar">
+              <div className="
+                provider-profile-avatar
+              ">
 
                 {user?.avatar ? (
 
                   <img
                     src={user.avatar}
-                    alt={user?.full_name}
-                    className="provider-profile-avatar-img"
+                    alt={
+                      user?.full_name ||
+                      "Provider"
+                    }
+                    className="
+                      provider-profile-avatar-img
+                    "
                   />
 
                 ) : (
 
                   user?.full_name
                     ?.charAt(0)
-                    ?.toUpperCase() || "U"
+                    ?.toUpperCase() ||
+                  "U"
+
                 )}
+
               </div>
+
 
               {/* USER INFO */}
 
-              <div className="provider-profile-info">
+              <div className="
+                provider-profile-info
+              ">
 
-                <h3 className="provider-profile-name">
+                <h3 className="
+                  provider-profile-name
+                ">
 
-                  {user?.full_name || "User"}
+                  {user?.full_name ||
+                    "User"}
 
                 </h3>
 
-                <p className="provider-profile-role">
+                <p className="
+                  provider-profile-role
+                ">
                   Provider
                 </p>
 
               </div>
 
-              <ChevronDown className="provider-chevron-icon" />
+
+              <ChevronDown
+                className="
+                  provider-chevron-icon
+                "
+              />
 
             </button>
 
-            {/* DROPDOWN */}
+
+            {/* ==================================
+                PROFILE DROPDOWN
+            ================================== */}
 
             {showMenu && (
 
-              <div className="provider-dropdown-menu">
+              <div className="
+                provider-dropdown-menu
+              ">
 
-                <div className="provider-dropdown-header">
 
-                  <h3 className="provider-dropdown-name">
+                <div className="
+                  provider-dropdown-header
+                ">
 
-                    {user?.full_name || "User"}
+                  <h3 className="
+                    provider-dropdown-name
+                  ">
+
+                    {user?.full_name ||
+                      "User"}
 
                   </h3>
 
-                  <p className="provider-dropdown-email">
+                  <p className="
+                    provider-dropdown-email
+                  ">
 
                     {user?.email ||
                       "user@example.com"}
 
                   </p>
+
                 </div>
 
-                <div className="provider-dropdown-items">
+
+                <div className="
+                  provider-dropdown-items
+                ">
+
 
                   <Link
                     to="/provider/profile"
-                    className="provider-dropdown-link"
+                    className="
+                      provider-dropdown-link
+                    "
+                    onClick={() =>
+                      setShowMenu(false)
+                    }
                   >
 
                     <User size={18} />
@@ -363,9 +531,15 @@ function ProviderNavbar({
 
                   </Link>
 
+
                   <Link
                     to="/provider/settings"
-                    className="provider-dropdown-link"
+                    className="
+                      provider-dropdown-link
+                    "
+                    onClick={() =>
+                      setShowMenu(false)
+                    }
                   >
 
                     <Settings size={18} />
@@ -374,9 +548,13 @@ function ProviderNavbar({
 
                   </Link>
 
+
                   <button
+                    type="button"
                     onClick={handleLogout}
-                    className="provider-dropdown-logout"
+                    className="
+                      provider-dropdown-logout
+                    "
                   >
 
                     <LogOut size={18} />
@@ -384,14 +562,23 @@ function ProviderNavbar({
                     Logout
 
                   </button>
+
                 </div>
+
               </div>
+
             )}
+
           </div>
+
         </div>
+
       </div>
+
     </header>
+
   )
 }
+
 
 export default ProviderNavbar
