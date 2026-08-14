@@ -1,46 +1,26 @@
 const bcrypt = require("bcryptjs");
-
 const jwt = require("jsonwebtoken");
-
+const crypto = require("crypto");
 const db = require("../config/database");
-
-const nodemailer = require("nodemailer");
-
-// ========================================
-// EMAIL TRANSPORTER
-// ========================================
-
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-
-  requireTLS: true,
-
-  connectionTimeout: 30000,
-  greetingTimeout: 30000,
-  socketTimeout: 60000,
-
-  family: 4,
-});
+const { Resend } = require("resend");
 
 // ========================================
-// VERIFY SMTP CONNECTION
+// RESEND EMAIL SERVICE
 // ========================================
 
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("❌ EMAIL SMTP CONNECTION FAILED");
-    console.error("EMAIL ERROR:", error);
-  } else {
-    console.log("✅ EMAIL SMTP CONNECTION SUCCESSFUL");
-  }
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+const FROM_EMAIL =
+  process.env.RESEND_FROM_EMAIL ||
+  "MultiServe <onboarding@resend.dev>";
+
+// ========================================
+// GENERATE SECURE OTP
+// ========================================
+
+const generateOTP = () => {
+  return crypto.randomInt(100000, 1000000).toString();
+};
 
 // ========================================
 // REGISTER
@@ -48,116 +28,359 @@ transporter.verify((error, success) => {
 
 exports.register = async (req, res) => {
   try {
-    const { full_name, email, phone, password, role } = req.body;
+    const {
+      full_name,
+      email,
+      phone,
+      password,
+      role,
+    } = req.body;
 
-    // ================================
-    // CHECK EXISTING USER
-    // ================================
+    // ========================================
+    // VALIDATE INPUT
+    // ========================================
 
-    const [existingUser] = await db.query(
-      `
-        SELECT *
-        FROM users
-        WHERE email = ?
-        `,
-      [email],
-    );
-
-    if (existingUser.length > 0) {
+    if (
+      !full_name ||
+      !email ||
+      !phone ||
+      !password ||
+      !role
+    ) {
       return res.status(400).json({
-        message: "Email already exists",
+        success: false,
+        message: "All fields are required",
       });
     }
 
-    // ================================
-    // HASH PASSWORD
-    // ================================
+    // ========================================
+    // NORMALIZE EMAIL
+    // ========================================
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const normalizedEmail = email
+      .trim()
+      .toLowerCase();
 
-    // ================================
-    // GENERATE OTP
-    // ================================
+    // ========================================
+    // VALIDATE ROLE
+    // ========================================
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const allowedRoles = [
+      "customer",
+      "provider",
+    ];
 
-    // OTP EXPIRES IN 10 MINUTES
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid account type",
+      });
+    }
 
-    // ================================
-    // CREATE USER
-    // ================================
+    // ========================================
+    // CHECK EXISTING USER
+    // ========================================
 
-    await db.query(
+    const [existingUsers] = await db.query(
       `
-  INSERT INTO users
-  (
-    full_name,
-    email,
-    phone,
-    password,
-    role,
-    email_verified,
-    email_otp,
-    otp_expires_at
-  )
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `,
-      [full_name, email, phone, hashedPassword, role, 0, otp, otpExpiry],
+      SELECT
+        id,
+        email_verified
+      FROM users
+      WHERE email = ?
+      `,
+      [normalizedEmail]
     );
 
-    // ================================
-    // SEND OTP EMAIL
-    // ================================
+    if (existingUsers.length > 0) {
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      const existingUser = existingUsers[0];
 
-      to: email,
+      // ========================================
+      // EXISTING VERIFIED ACCOUNT
+      // ========================================
 
-      subject: "MultiServe Email Verification OTP",
+      if (Number(existingUser.email_verified) === 1) {
+        return res.status(400).json({
+          success: false,
+          message: "An account with this email already exists",
+        });
+      }
 
-      html: `
-        <div style="
-          font-family: Arial;
-          padding: 20px;
-        ">
-          <h2>
-            Welcome to MultiServe
-          </h2>
+      // ========================================
+      // REMOVE OLD UNVERIFIED ACCOUNT
+      // ========================================
 
-          <p>
-            Verify your email
-            using this OTP:
-          </p>
+      await db.query(
+        `
+        DELETE FROM users
+        WHERE id = ?
+        `,
+        [existingUser.id]
+      );
+    }
 
-          <h1 style="
-            color: #3b82f6;
-            letter-spacing: 5px;
-          ">
-            ${otp}
-          </h1>
+    // ========================================
+    // HASH PASSWORD
+    // ========================================
 
-          <p>
-            This OTP expires
-            in 10 minutes.
-          </p>
-        </div>
+    const hashedPassword = await bcrypt.hash(
+      password,
+      12
+    );
+
+    // ========================================
+    // GENERATE OTP
+    // ========================================
+
+    const otp = generateOTP();
+
+    const otpExpiry = new Date(
+      Date.now() + 10 * 60 * 1000
+    );
+
+    // ========================================
+    // CREATE USER
+    // ========================================
+
+    const [result] = await db.query(
+      `
+      INSERT INTO users
+      (
+        full_name,
+        email,
+        phone,
+        password,
+        role,
+        email_verified,
+        email_otp,
+        otp_expires_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `,
-    });
+      [
+        full_name.trim(),
+        normalizedEmail,
+        phone.trim(),
+        hashedPassword,
+        role,
+        0,
+        otp,
+        otpExpiry,
+      ]
+    );
 
-    res.status(201).json({
+    const userId = result.insertId;
+
+    // ========================================
+    // SEND OTP THROUGH RESEND
+    // ========================================
+
+    const { data, error } =
+      await resend.emails.send({
+        from: FROM_EMAIL,
+
+        to: [normalizedEmail],
+
+        subject:
+          "Your MultiServe Verification Code",
+
+        html: `
+          <!DOCTYPE html>
+
+          <html>
+
+          <head>
+            <meta charset="UTF-8">
+          </head>
+
+          <body
+            style="
+              margin:0;
+              padding:0;
+              background:#f4f4f5;
+              font-family:Arial,Helvetica,sans-serif;
+            "
+          >
+
+            <div
+              style="
+                max-width:600px;
+                margin:40px auto;
+                background:#ffffff;
+                padding:40px;
+                border-radius:16px;
+              "
+            >
+
+              <h1
+                style="
+                  margin:0 0 10px;
+                  color:#111827;
+                "
+              >
+                Welcome to MultiServe
+              </h1>
+
+              <p
+                style="
+                  color:#4b5563;
+                  font-size:16px;
+                  line-height:1.6;
+                "
+              >
+                Thank you for creating your MultiServe
+                account.
+              </p>
+
+              <p
+                style="
+                  color:#4b5563;
+                  font-size:16px;
+                "
+              >
+                Use the verification code below
+                to verify your email address:
+              </p>
+
+              <div
+                style="
+                  margin:30px 0;
+                  padding:25px;
+                  text-align:center;
+                  background:#f3f4f6;
+                  border-radius:12px;
+                "
+              >
+
+                <div
+                  style="
+                    font-size:36px;
+                    font-weight:bold;
+                    letter-spacing:10px;
+                    color:#2563eb;
+                  "
+                >
+                  ${otp}
+                </div>
+
+              </div>
+
+              <p
+                style="
+                  color:#6b7280;
+                  font-size:14px;
+                "
+              >
+                This verification code expires
+                in 10 minutes.
+              </p>
+
+              <p
+                style="
+                  color:#6b7280;
+                  font-size:14px;
+                "
+              >
+                If you did not create this account,
+                you can safely ignore this email.
+              </p>
+
+              <hr
+                style="
+                  margin:30px 0;
+                  border:none;
+                  border-top:1px solid #e5e7eb;
+                "
+              >
+
+              <p
+                style="
+                  color:#9ca3af;
+                  font-size:12px;
+                  text-align:center;
+                "
+              >
+                © ${new Date().getFullYear()}
+                MultiServe. All rights reserved.
+              </p>
+
+            </div>
+
+          </body>
+
+          </html>
+        `,
+      });
+
+    // ========================================
+    // EMAIL FAILED
+    // ========================================
+
+    if (error) {
+
+      console.error(
+        "RESEND EMAIL ERROR:",
+        error
+      );
+
+      // ========================================
+      // REMOVE USER THAT WAS JUST CREATED
+      // ========================================
+
+      try {
+        await db.query(
+          `
+          DELETE FROM users
+          WHERE id = ?
+          `,
+          [userId]
+        );
+      } catch (deleteError) {
+
+        console.error(
+          "FAILED TO ROLLBACK USER:",
+          deleteError
+        );
+      }
+
+      return res.status(503).json({
+        success: false,
+        message:
+          "We could not send the verification email. Please try again.",
+      });
+    }
+
+    // ========================================
+    // SUCCESS
+    // ========================================
+
+    console.log(
+      "OTP EMAIL SENT:",
+      normalizedEmail,
+      data?.id || ""
+    );
+
+    return res.status(201).json({
       success: true,
 
-      message: "Account created successfully. OTP sent to email.",
+      message:
+        "Account created successfully. Verification OTP sent to your email.",
 
-      email,
+      email: normalizedEmail,
     });
-  } catch (error) {
-    console.log(error);
 
-    res.status(500).json({
-      message: "Server Error",
+  } catch (error) {
+
+    console.error(
+      "REGISTER ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Registration failed. Please try again.",
     });
   }
 };
@@ -168,11 +391,27 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
 
-    // ================================
+    const {
+      email,
+      password,
+    } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Email and password are required",
+      });
+    }
+
+    const normalizedEmail = email
+      .trim()
+      .toLowerCase();
+
+    // ========================================
     // FIND USER
-    // ================================
+    // ========================================
 
     const [users] = await db.query(
       `
@@ -180,46 +419,56 @@ exports.login = async (req, res) => {
       FROM users
       WHERE email = ?
       `,
-      [email],
+      [normalizedEmail]
     );
 
     if (users.length === 0) {
       return res.status(400).json({
+        success: false,
         message: "Invalid credentials",
       });
     }
 
     const user = users[0];
 
-    // ================================
+    // ========================================
     // CHECK PASSWORD
-    // ================================
+    // ========================================
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const passwordMatch =
+      await bcrypt.compare(
+        password,
+        user.password
+      );
 
-    if (!isMatch) {
+    if (!passwordMatch) {
       return res.status(400).json({
+        success: false,
         message: "Invalid credentials",
       });
     }
 
-    // ================================
-    // CHECK EMAIL VERIFIED
-    // ================================
+    // ========================================
+    // CHECK EMAIL VERIFICATION
+    // ========================================
 
-    if (!user.email_verified) {
+    if (Number(user.email_verified) !== 1) {
+
       return res.status(403).json({
         success: false,
 
-        message: "Please verify your email with OTP first",
+        message:
+          "Please verify your email before logging in.",
 
         email: user.email,
+
+        requiresVerification: true,
       });
     }
 
-    // ================================
-    // GENERATE JWT
-    // ================================
+    // ========================================
+    // CREATE JWT
+    // ========================================
 
     const token = jwt.sign(
       {
@@ -230,13 +479,27 @@ exports.login = async (req, res) => {
       process.env.JWT_SECRET,
 
       {
-        expiresIn: process.env.JWT_EXPIRES_IN || "7d",
-      },
+        expiresIn:
+          process.env.JWT_EXPIRES_IN || "7d",
+      }
     );
 
-    // ================================
-    // SUCCESS RESPONSE
-    // ================================
+    // ========================================
+    // UPDATE LAST LOGIN
+    // ========================================
+
+    await db.query(
+      `
+      UPDATE users
+      SET last_login = NOW()
+      WHERE id = ?
+      `,
+      [user.id]
+    );
+
+    // ========================================
+    // RESPONSE
+    // ========================================
 
     return res.status(200).json({
       success: true,
@@ -246,24 +509,37 @@ exports.login = async (req, res) => {
       user: {
         id: user.id,
 
-        full_name: user.full_name,
+        full_name:
+          user.full_name,
 
-        email: user.email,
+        email:
+          user.email,
 
-        role: user.role,
+        phone:
+          user.phone,
 
-        profile_image: user.profile_image,
+        role:
+          user.role,
 
-        email_verified: user.email_verified,
+        profile_image:
+          user.profile_image,
+
+        email_verified:
+          user.email_verified,
       },
     });
+
   } catch (error) {
-    console.error("LOGIN ERROR:", error);
+
+    console.error(
+      "LOGIN ERROR:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
-
-      message: "Server Error",
+      message:
+        "Login failed. Please try again.",
     });
   }
 };
@@ -272,35 +548,63 @@ exports.login = async (req, res) => {
 // VERIFY OTP
 // ========================================
 
-exports.verifyOTP = async (req, res) => {
-  try {
-    const { email, otp } = req.body;
+exports.verifyOTP = async (
+  req,
+  res
+) => {
 
-    // ================================
-    // VALIDATE INPUT
-    // ================================
+  try {
+
+    const {
+      email,
+      otp,
+    } = req.body;
+
+    // ========================================
+    // VALIDATE
+    // ========================================
 
     if (!email || !otp) {
+
       return res.status(400).json({
         success: false,
-        message: "Email and OTP are required",
+        message:
+          "Email and OTP are required",
       });
     }
 
-    // ================================
+    if (!/^\d{6}$/.test(String(otp))) {
+
+      return res.status(400).json({
+        success: false,
+        message:
+          "OTP must be a 6-digit number",
+      });
+    }
+
+    const normalizedEmail =
+      email.trim().toLowerCase();
+
+    // ========================================
     // FIND USER
-    // ================================
+    // ========================================
 
     const [users] = await db.query(
       `
-        SELECT *
-        FROM users
-        WHERE email = ?
-        `,
-      [email],
+      SELECT
+        id,
+        email,
+        email_verified,
+        email_otp,
+        otp_expires_at
+      FROM users
+      WHERE email = ?
+      `,
+      [normalizedEmail]
     );
 
     if (users.length === 0) {
+
       return res.status(404).json({
         success: false,
         message: "User not found",
@@ -309,42 +613,69 @@ exports.verifyOTP = async (req, res) => {
 
     const user = users[0];
 
-    // ================================
+    // ========================================
     // ALREADY VERIFIED
-    // ================================
+    // ========================================
 
-    if (Number(user.email_verified) === 1) {
+    if (
+      Number(user.email_verified) === 1
+    ) {
+
       return res.status(200).json({
         success: true,
-        message: "Email is already verified",
+        message:
+          "Email is already verified",
       });
     }
 
-    // ================================
-    // CHECK OTP
-    // ================================
+    // ========================================
+    // CHECK OTP EXISTS
+    // ========================================
 
-    if (String(user.email_otp) !== String(otp)) {
+    if (!user.email_otp) {
+
+      return res.status(400).json({
+        success: false,
+        message:
+          "No active OTP. Please request a new OTP.",
+      });
+    }
+
+    // ========================================
+    // CHECK EXPIRATION
+    // ========================================
+
+    if (
+      !user.otp_expires_at ||
+      new Date() >
+        new Date(user.otp_expires_at)
+    ) {
+
+      return res.status(400).json({
+        success: false,
+        message:
+          "OTP has expired. Please request a new OTP.",
+      });
+    }
+
+    // ========================================
+    // CHECK OTP
+    // ========================================
+
+    if (
+      String(user.email_otp) !==
+      String(otp)
+    ) {
+
       return res.status(400).json({
         success: false,
         message: "Invalid OTP",
       });
     }
 
-    // ================================
-    // CHECK OTP EXPIRATION
-    // ================================
-
-    if (!user.otp_expires_at || new Date() > new Date(user.otp_expires_at)) {
-      return res.status(400).json({
-        success: false,
-        message: "OTP expired",
-      });
-    }
-
-    // ================================
-    // VERIFY USER
-    // ================================
+    // ========================================
+    // VERIFY EMAIL
+    // ========================================
 
     await db.query(
       `
@@ -355,23 +686,30 @@ exports.verifyOTP = async (req, res) => {
         otp_expires_at = NULL
       WHERE id = ?
       `,
-      [user.id],
+      [user.id]
     );
 
-    // ================================
+    // ========================================
     // SUCCESS
-    // ================================
+    // ========================================
 
     return res.status(200).json({
       success: true,
-      message: "Email verified successfully",
+      message:
+        "Email verified successfully. You can now log in.",
     });
+
   } catch (error) {
-    console.error("VERIFY OTP ERROR:", error);
+
+    console.error(
+      "VERIFY OTP ERROR:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
-      message: "Verification failed",
+      message:
+        "Verification failed. Please try again.",
     });
   }
 };
@@ -380,42 +718,81 @@ exports.verifyOTP = async (req, res) => {
 // RESEND OTP
 // ========================================
 
-exports.resendOTP = async (req, res) => {
+exports.resendOTP = async (
+  req,
+  res
+) => {
+
   try {
+
     const { email } = req.body;
 
-    // ================================
+    if (!email) {
+
+      return res.status(400).json({
+        success: false,
+        message:
+          "Email address is required",
+      });
+    }
+
+    const normalizedEmail =
+      email.trim().toLowerCase();
+
+    // ========================================
     // FIND USER
-    // ================================
+    // ========================================
 
     const [users] = await db.query(
       `
-        SELECT *
-        FROM users
-        WHERE email = ?
-        `,
-      [email],
+      SELECT
+        id,
+        email,
+        email_verified
+      FROM users
+      WHERE email = ?
+      `,
+      [normalizedEmail]
     );
 
     if (users.length === 0) {
+
       return res.status(404).json({
+        success: false,
         message: "User not found",
       });
     }
 
     const user = users[0];
 
-    // ================================
+    // ========================================
+    // ALREADY VERIFIED
+    // ========================================
+
+    if (
+      Number(user.email_verified) === 1
+    ) {
+
+      return res.status(400).json({
+        success: false,
+        message:
+          "This email is already verified.",
+      });
+    }
+
+    // ========================================
     // GENERATE NEW OTP
-    // ================================
+    // ========================================
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = generateOTP();
 
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    const otpExpiry = new Date(
+      Date.now() + 10 * 60 * 1000
+    );
 
-    // ================================
+    // ========================================
     // UPDATE OTP
-    // ================================
+    // ========================================
 
     await db.query(
       `
@@ -425,54 +802,127 @@ exports.resendOTP = async (req, res) => {
         otp_expires_at = ?
       WHERE id = ?
       `,
-      [otp, otpExpiry, user.id],
+      [
+        otp,
+        otpExpiry,
+        user.id,
+      ]
     );
 
-    // ================================
-    // SEND EMAIL
-    // ================================
+    // ========================================
+    // SEND OTP
+    // ========================================
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+    const { data, error } =
+      await resend.emails.send({
 
-      to: email,
+        from: FROM_EMAIL,
 
-      subject: "MultiServe OTP Code",
+        to: [normalizedEmail],
 
-      html: `
-        <div style="
-          font-family: Arial;
-          padding: 20px;
-        ">
-          <h2>
-            Your New OTP
-          </h2>
+        subject:
+          "Your New MultiServe Verification Code",
 
-          <h1 style="
-            color: #3b82f6;
-            letter-spacing: 5px;
-          ">
-            ${otp}
-          </h1>
+        html: `
+          <div
+            style="
+              font-family:Arial,Helvetica,sans-serif;
+              max-width:600px;
+              margin:auto;
+              padding:40px;
+              background:#ffffff;
+            "
+          >
 
-          <p>
-            OTP expires
-            in 10 minutes.
-          </p>
-        </div>
-      `,
-    });
+            <h2>
+              MultiServe Email Verification
+            </h2>
 
-    res.status(200).json({
+            <p>
+              Here is your new verification code:
+            </p>
+
+            <div
+              style="
+                margin:25px 0;
+                padding:20px;
+                text-align:center;
+                background:#f3f4f6;
+                border-radius:10px;
+              "
+            >
+
+              <strong
+                style="
+                  font-size:36px;
+                  letter-spacing:10px;
+                  color:#2563eb;
+                "
+              >
+                ${otp}
+              </strong>
+
+            </div>
+
+            <p>
+              This code expires in 10 minutes.
+            </p>
+
+            <p
+              style="
+                color:#6b7280;
+                font-size:13px;
+              "
+            >
+              If you did not request this code,
+              please ignore this email.
+            </p>
+
+          </div>
+        `,
+      });
+
+    // ========================================
+    // RESEND FAILED
+    // ========================================
+
+    if (error) {
+
+      console.error(
+        "RESEND OTP EMAIL ERROR:",
+        error
+      );
+
+      return res.status(503).json({
+        success: false,
+        message:
+          "We could not send the OTP. Please try again.",
+      });
+    }
+
+    console.log(
+      "OTP RESENT:",
+      normalizedEmail,
+      data?.id || ""
+    );
+
+    return res.status(200).json({
       success: true,
-
-      message: "OTP resent successfully",
+      message:
+        "A new OTP has been sent to your email.",
     });
-  } catch (error) {
-    console.log(error);
 
-    res.status(500).json({
-      message: "Failed to resend OTP",
+  } catch (error) {
+
+    console.error(
+      "RESEND OTP ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Failed to resend OTP.",
     });
   }
 };
