@@ -1,18 +1,10 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+
 const db = require("../config/database");
-const { Resend } = require("resend");
 
-// ========================================
-// RESEND EMAIL SERVICE
-// ========================================
-
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-const FROM_EMAIL =
-  process.env.RESEND_FROM_EMAIL ||
-  "MultiServe <onboarding@resend.dev>";
+const { sendVerificationOTP } = require("../services/emailService");
 
 // ========================================
 // GENERATE SECURE OTP
@@ -28,25 +20,13 @@ const generateOTP = () => {
 
 exports.register = async (req, res) => {
   try {
-    const {
-      full_name,
-      email,
-      phone,
-      password,
-      role,
-    } = req.body;
+    const { full_name, email, phone, password, role } = req.body;
 
     // ========================================
     // VALIDATE INPUT
     // ========================================
 
-    if (
-      !full_name ||
-      !email ||
-      !phone ||
-      !password ||
-      !role
-    ) {
+    if (!full_name || !email || !phone || !password || !role) {
       return res.status(400).json({
         success: false,
         message: "All fields are required",
@@ -57,18 +37,13 @@ exports.register = async (req, res) => {
     // NORMALIZE EMAIL
     // ========================================
 
-    const normalizedEmail = email
-      .trim()
-      .toLowerCase();
+    const normalizedEmail = email.trim().toLowerCase();
 
     // ========================================
     // VALIDATE ROLE
     // ========================================
 
-    const allowedRoles = [
-      "customer",
-      "provider",
-    ];
+    const allowedRoles = ["customer", "provider"];
 
     if (!allowedRoles.includes(role)) {
       return res.status(400).json({
@@ -89,11 +64,10 @@ exports.register = async (req, res) => {
       FROM users
       WHERE email = ?
       `,
-      [normalizedEmail]
+      [normalizedEmail],
     );
 
     if (existingUsers.length > 0) {
-
       const existingUser = existingUsers[0];
 
       // ========================================
@@ -116,7 +90,7 @@ exports.register = async (req, res) => {
         DELETE FROM users
         WHERE id = ?
         `,
-        [existingUser.id]
+        [existingUser.id],
       );
     }
 
@@ -124,10 +98,7 @@ exports.register = async (req, res) => {
     // HASH PASSWORD
     // ========================================
 
-    const hashedPassword = await bcrypt.hash(
-      password,
-      12
-    );
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     // ========================================
     // GENERATE OTP
@@ -135,9 +106,7 @@ exports.register = async (req, res) => {
 
     const otp = generateOTP();
 
-    const otpExpiry = new Date(
-      Date.now() + 10 * 60 * 1000
-    );
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
     // ========================================
     // CREATE USER
@@ -167,165 +136,28 @@ exports.register = async (req, res) => {
         0,
         otp,
         otpExpiry,
-      ]
+      ],
     );
 
     const userId = result.insertId;
 
     // ========================================
-    // SEND OTP THROUGH RESEND
+    // SEND OTP THROUGH GMAIL SMTP
     // ========================================
 
-    const { data, error } =
-      await resend.emails.send({
-        from: FROM_EMAIL,
-
-        to: [normalizedEmail],
-
-        subject:
-          "Your MultiServe Verification Code",
-
-        html: `
-          <!DOCTYPE html>
-
-          <html>
-
-          <head>
-            <meta charset="UTF-8">
-          </head>
-
-          <body
-            style="
-              margin:0;
-              padding:0;
-              background:#f4f4f5;
-              font-family:Arial,Helvetica,sans-serif;
-            "
-          >
-
-            <div
-              style="
-                max-width:600px;
-                margin:40px auto;
-                background:#ffffff;
-                padding:40px;
-                border-radius:16px;
-              "
-            >
-
-              <h1
-                style="
-                  margin:0 0 10px;
-                  color:#111827;
-                "
-              >
-                Welcome to MultiServe
-              </h1>
-
-              <p
-                style="
-                  color:#4b5563;
-                  font-size:16px;
-                  line-height:1.6;
-                "
-              >
-                Thank you for creating your MultiServe
-                account.
-              </p>
-
-              <p
-                style="
-                  color:#4b5563;
-                  font-size:16px;
-                "
-              >
-                Use the verification code below
-                to verify your email address:
-              </p>
-
-              <div
-                style="
-                  margin:30px 0;
-                  padding:25px;
-                  text-align:center;
-                  background:#f3f4f6;
-                  border-radius:12px;
-                "
-              >
-
-                <div
-                  style="
-                    font-size:36px;
-                    font-weight:bold;
-                    letter-spacing:10px;
-                    color:#2563eb;
-                  "
-                >
-                  ${otp}
-                </div>
-
-              </div>
-
-              <p
-                style="
-                  color:#6b7280;
-                  font-size:14px;
-                "
-              >
-                This verification code expires
-                in 10 minutes.
-              </p>
-
-              <p
-                style="
-                  color:#6b7280;
-                  font-size:14px;
-                "
-              >
-                If you did not create this account,
-                you can safely ignore this email.
-              </p>
-
-              <hr
-                style="
-                  margin:30px 0;
-                  border:none;
-                  border-top:1px solid #e5e7eb;
-                "
-              >
-
-              <p
-                style="
-                  color:#9ca3af;
-                  font-size:12px;
-                  text-align:center;
-                "
-              >
-                © ${new Date().getFullYear()}
-                MultiServe. All rights reserved.
-              </p>
-
-            </div>
-
-          </body>
-
-          </html>
-        `,
+    try {
+      await sendVerificationOTP({
+        to: normalizedEmail,
+        otp,
+        type: "registration",
       });
 
-    // ========================================
-    // EMAIL FAILED
-    // ========================================
-
-    if (error) {
-
-      console.error(
-        "RESEND EMAIL ERROR:",
-        error
-      );
+      console.log("OTP EMAIL SENT:", normalizedEmail);
+    } catch (emailError) {
+      console.error("OTP EMAIL ERROR:", emailError.message);
 
       // ========================================
-      // REMOVE USER THAT WAS JUST CREATED
+      // ROLLBACK USER
       // ========================================
 
       try {
@@ -334,32 +166,21 @@ exports.register = async (req, res) => {
           DELETE FROM users
           WHERE id = ?
           `,
-          [userId]
+          [userId],
         );
       } catch (deleteError) {
-
-        console.error(
-          "FAILED TO ROLLBACK USER:",
-          deleteError
-        );
+        console.error("FAILED TO ROLLBACK USER:", deleteError.message);
       }
 
       return res.status(503).json({
         success: false,
-        message:
-          "We could not send the verification email. Please try again.",
+        message: "We could not send the verification email. Please try again.",
       });
     }
 
     // ========================================
     // SUCCESS
     // ========================================
-
-    console.log(
-      "OTP EMAIL SENT:",
-      normalizedEmail,
-      data?.id || ""
-    );
 
     return res.status(201).json({
       success: true,
@@ -369,18 +190,12 @@ exports.register = async (req, res) => {
 
       email: normalizedEmail,
     });
-
   } catch (error) {
-
-    console.error(
-      "REGISTER ERROR:",
-      error
-    );
+    console.error("REGISTER ERROR:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Registration failed. Please try again.",
+      message: "Registration failed. Please try again.",
     });
   }
 };
@@ -391,23 +206,16 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-
-    const {
-      email,
-      password,
-    } = req.body;
+    const { email, password } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message:
-          "Email and password are required",
+        message: "Email and password are required",
       });
     }
 
-    const normalizedEmail = email
-      .trim()
-      .toLowerCase();
+    const normalizedEmail = email.trim().toLowerCase();
 
     // ========================================
     // FIND USER
@@ -419,7 +227,7 @@ exports.login = async (req, res) => {
       FROM users
       WHERE email = ?
       `,
-      [normalizedEmail]
+      [normalizedEmail],
     );
 
     if (users.length === 0) {
@@ -435,11 +243,7 @@ exports.login = async (req, res) => {
     // CHECK PASSWORD
     // ========================================
 
-    const passwordMatch =
-      await bcrypt.compare(
-        password,
-        user.password
-      );
+    const passwordMatch = await bcrypt.compare(password, user.password);
 
     if (!passwordMatch) {
       return res.status(400).json({
@@ -453,12 +257,10 @@ exports.login = async (req, res) => {
     // ========================================
 
     if (Number(user.email_verified) !== 1) {
-
       return res.status(403).json({
         success: false,
 
-        message:
-          "Please verify your email before logging in.",
+        message: "Please verify your email before logging in.",
 
         email: user.email,
 
@@ -479,9 +281,8 @@ exports.login = async (req, res) => {
       process.env.JWT_SECRET,
 
       {
-        expiresIn:
-          process.env.JWT_EXPIRES_IN || "7d",
-      }
+        expiresIn: process.env.JWT_EXPIRES_IN || "7d",
+      },
     );
 
     // ========================================
@@ -494,7 +295,7 @@ exports.login = async (req, res) => {
       SET last_login = NOW()
       WHERE id = ?
       `,
-      [user.id]
+      [user.id],
     );
 
     // ========================================
@@ -509,37 +310,25 @@ exports.login = async (req, res) => {
       user: {
         id: user.id,
 
-        full_name:
-          user.full_name,
+        full_name: user.full_name,
 
-        email:
-          user.email,
+        email: user.email,
 
-        phone:
-          user.phone,
+        phone: user.phone,
 
-        role:
-          user.role,
+        role: user.role,
 
-        profile_image:
-          user.profile_image,
+        profile_image: user.profile_image,
 
-        email_verified:
-          user.email_verified,
+        email_verified: user.email_verified,
       },
     });
-
   } catch (error) {
-
-    console.error(
-      "LOGIN ERROR:",
-      error
-    );
+    console.error("LOGIN ERROR:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Login failed. Please try again.",
+      message: "Login failed. Please try again.",
     });
   }
 };
@@ -548,42 +337,29 @@ exports.login = async (req, res) => {
 // VERIFY OTP
 // ========================================
 
-exports.verifyOTP = async (
-  req,
-  res
-) => {
-
+exports.verifyOTP = async (req, res) => {
   try {
-
-    const {
-      email,
-      otp,
-    } = req.body;
+    const { email, otp } = req.body;
 
     // ========================================
     // VALIDATE
     // ========================================
 
     if (!email || !otp) {
-
       return res.status(400).json({
         success: false,
-        message:
-          "Email and OTP are required",
+        message: "Email and OTP are required",
       });
     }
 
     if (!/^\d{6}$/.test(String(otp))) {
-
       return res.status(400).json({
         success: false,
-        message:
-          "OTP must be a 6-digit number",
+        message: "OTP must be a 6-digit number",
       });
     }
 
-    const normalizedEmail =
-      email.trim().toLowerCase();
+    const normalizedEmail = email.trim().toLowerCase();
 
     // ========================================
     // FIND USER
@@ -600,11 +376,10 @@ exports.verifyOTP = async (
       FROM users
       WHERE email = ?
       `,
-      [normalizedEmail]
+      [normalizedEmail],
     );
 
     if (users.length === 0) {
-
       return res.status(404).json({
         success: false,
         message: "User not found",
@@ -617,14 +392,10 @@ exports.verifyOTP = async (
     // ALREADY VERIFIED
     // ========================================
 
-    if (
-      Number(user.email_verified) === 1
-    ) {
-
+    if (Number(user.email_verified) === 1) {
       return res.status(200).json({
         success: true,
-        message:
-          "Email is already verified",
+        message: "Email is already verified",
       });
     }
 
@@ -633,11 +404,9 @@ exports.verifyOTP = async (
     // ========================================
 
     if (!user.email_otp) {
-
       return res.status(400).json({
         success: false,
-        message:
-          "No active OTP. Please request a new OTP.",
+        message: "No active OTP. Please request a new OTP.",
       });
     }
 
@@ -645,16 +414,10 @@ exports.verifyOTP = async (
     // CHECK EXPIRATION
     // ========================================
 
-    if (
-      !user.otp_expires_at ||
-      new Date() >
-        new Date(user.otp_expires_at)
-    ) {
-
+    if (!user.otp_expires_at || new Date() > new Date(user.otp_expires_at)) {
       return res.status(400).json({
         success: false,
-        message:
-          "OTP has expired. Please request a new OTP.",
+        message: "OTP has expired. Please request a new OTP.",
       });
     }
 
@@ -662,11 +425,7 @@ exports.verifyOTP = async (
     // CHECK OTP
     // ========================================
 
-    if (
-      String(user.email_otp) !==
-      String(otp)
-    ) {
-
+    if (String(user.email_otp) !== String(otp)) {
       return res.status(400).json({
         success: false,
         message: "Invalid OTP",
@@ -686,7 +445,7 @@ exports.verifyOTP = async (
         otp_expires_at = NULL
       WHERE id = ?
       `,
-      [user.id]
+      [user.id],
     );
 
     // ========================================
@@ -695,21 +454,15 @@ exports.verifyOTP = async (
 
     return res.status(200).json({
       success: true,
-      message:
-        "Email verified successfully. You can now log in.",
+
+      message: "Email verified successfully. You can now log in.",
     });
-
   } catch (error) {
-
-    console.error(
-      "VERIFY OTP ERROR:",
-      error
-    );
+    console.error("VERIFY OTP ERROR:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Verification failed. Please try again.",
+      message: "Verification failed. Please try again.",
     });
   }
 };
@@ -718,26 +471,18 @@ exports.verifyOTP = async (
 // RESEND OTP
 // ========================================
 
-exports.resendOTP = async (
-  req,
-  res
-) => {
-
+exports.resendOTP = async (req, res) => {
   try {
-
     const { email } = req.body;
 
     if (!email) {
-
       return res.status(400).json({
         success: false,
-        message:
-          "Email address is required",
+        message: "Email address is required",
       });
     }
 
-    const normalizedEmail =
-      email.trim().toLowerCase();
+    const normalizedEmail = email.trim().toLowerCase();
 
     // ========================================
     // FIND USER
@@ -752,11 +497,10 @@ exports.resendOTP = async (
       FROM users
       WHERE email = ?
       `,
-      [normalizedEmail]
+      [normalizedEmail],
     );
 
     if (users.length === 0) {
-
       return res.status(404).json({
         success: false,
         message: "User not found",
@@ -769,14 +513,10 @@ exports.resendOTP = async (
     // ALREADY VERIFIED
     // ========================================
 
-    if (
-      Number(user.email_verified) === 1
-    ) {
-
+    if (Number(user.email_verified) === 1) {
       return res.status(400).json({
         success: false,
-        message:
-          "This email is already verified.",
+        message: "This email is already verified.",
       });
     }
 
@@ -786,9 +526,7 @@ exports.resendOTP = async (
 
     const otp = generateOTP();
 
-    const otpExpiry = new Date(
-      Date.now() + 10 * 60 * 1000
-    );
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
     // ========================================
     // UPDATE OTP
@@ -802,127 +540,45 @@ exports.resendOTP = async (
         otp_expires_at = ?
       WHERE id = ?
       `,
-      [
-        otp,
-        otpExpiry,
-        user.id,
-      ]
+      [otp, otpExpiry, user.id],
     );
 
     // ========================================
-    // SEND OTP
+    // SEND OTP THROUGH GMAIL SMTP
     // ========================================
 
-    const { data, error } =
-      await resend.emails.send({
-
-        from: FROM_EMAIL,
-
-        to: [normalizedEmail],
-
-        subject:
-          "Your New MultiServe Verification Code",
-
-        html: `
-          <div
-            style="
-              font-family:Arial,Helvetica,sans-serif;
-              max-width:600px;
-              margin:auto;
-              padding:40px;
-              background:#ffffff;
-            "
-          >
-
-            <h2>
-              MultiServe Email Verification
-            </h2>
-
-            <p>
-              Here is your new verification code:
-            </p>
-
-            <div
-              style="
-                margin:25px 0;
-                padding:20px;
-                text-align:center;
-                background:#f3f4f6;
-                border-radius:10px;
-              "
-            >
-
-              <strong
-                style="
-                  font-size:36px;
-                  letter-spacing:10px;
-                  color:#2563eb;
-                "
-              >
-                ${otp}
-              </strong>
-
-            </div>
-
-            <p>
-              This code expires in 10 minutes.
-            </p>
-
-            <p
-              style="
-                color:#6b7280;
-                font-size:13px;
-              "
-            >
-              If you did not request this code,
-              please ignore this email.
-            </p>
-
-          </div>
-        `,
+    try {
+      await sendVerificationOTP({
+        to: normalizedEmail,
+        otp,
+        type: "resend",
       });
 
-    // ========================================
-    // RESEND FAILED
-    // ========================================
-
-    if (error) {
-
-      console.error(
-        "RESEND OTP EMAIL ERROR:",
-        error
-      );
+      console.log("OTP RESENT:", normalizedEmail);
+    } catch (emailError) {
+      console.error("RESEND OTP EMAIL ERROR:", emailError.message);
 
       return res.status(503).json({
         success: false,
-        message:
-          "We could not send the OTP. Please try again.",
+        message: "We could not send the OTP. Please try again.",
       });
     }
 
-    console.log(
-      "OTP RESENT:",
-      normalizedEmail,
-      data?.id || ""
-    );
+    // ========================================
+    // SUCCESS
+    // ========================================
 
     return res.status(200).json({
       success: true,
-      message:
-        "A new OTP has been sent to your email.",
+
+      message: "A new OTP has been sent to your email.",
     });
-
   } catch (error) {
-
-    console.error(
-      "RESEND OTP ERROR:",
-      error
-    );
+    console.error("RESEND OTP ERROR:", error);
 
     return res.status(500).json({
       success: false,
-      message:
-        "Failed to resend OTP.",
+      message: "Failed to resend OTP.",
     });
   }
 };

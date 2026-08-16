@@ -16,7 +16,9 @@ const app = express();
 // ========================================
 
 const server = http.createServer(app);
-
+const {
+  verifyEmailTransporter,
+} = require("./services/emailService");
 // ========================================
 // CORS CONFIGURATION
 // ========================================
@@ -357,11 +359,26 @@ app.use((err, req, res, next) => {
 // START SERVER
 // ========================================
 
+// ========================================
+// START SERVER
+// ========================================
+
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, "0.0.0.0", () => {
+server.listen(PORT, "0.0.0.0", async () => {
   console.log("====================================");
   console.log("🚀 MultiServe Server Running");
   console.log(`🌍 PORT: ${PORT}`);
+  console.log(
+    `🔧 Environment: ${
+      process.env.NODE_ENV || "development"
+    }`
+  );
   console.log("====================================");
+
+  // ======================================
+  // VERIFY GMAIL SMTP
+  // ======================================
+
+  await verifyEmailTransporter();
 });

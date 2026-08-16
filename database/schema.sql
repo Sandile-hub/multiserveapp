@@ -559,3 +559,40 @@ UPDATE users
 SET email_verified = 1
 WHERE email = 'admin@multiserve.com'
   AND role = 'admin';
+
+USE `multiserve-app`;
+
+-- Remove the failed/old table if it exists
+DROP TABLE IF EXISTS email_verification_tokens;
+
+-- ========================================
+-- EMAIL VERIFICATION OTP TABLE
+-- ========================================
+
+CREATE TABLE email_verification_tokens (
+    id INT NOT NULL AUTO_INCREMENT,
+
+    user_id INT NOT NULL,
+
+    otp_hash VARCHAR(255) NOT NULL,
+
+    expires_at DATETIME NOT NULL,
+
+    attempts INT NOT NULL DEFAULT 0,
+
+    used TINYINT(1) NOT NULL DEFAULT 0,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+
+    INDEX idx_email_verification_user (user_id),
+
+    INDEX idx_email_verification_expiry (expires_at),
+
+    CONSTRAINT fk_email_verification_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
