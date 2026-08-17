@@ -369,11 +369,7 @@ server.listen(PORT, "0.0.0.0", async () => {
   console.log("====================================");
   console.log("🚀 MultiServe Server Running");
   console.log(`🌍 PORT: ${PORT}`);
-  console.log(
-    `🔧 Environment: ${
-      process.env.NODE_ENV || "development"
-    }`
-  );
+
   console.log("====================================");
 
   // ======================================
