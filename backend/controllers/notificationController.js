@@ -8,7 +8,8 @@ exports.createNotification = async (
   user_id,
   title,
   message,
-  type = "system"
+  type = "general",
+  isRead = false
 ) => {
   try {
     const [result] = await db.query(
@@ -21,13 +22,14 @@ exports.createNotification = async (
         type,
         is_read
       )
-      VALUES (?, ?, ?, ?, FALSE)
+      VALUES (?, ?, ?, ?, ?)
       `,
       [
         user_id,
         title,
         message,
         type,
+        isRead,
       ]
     );
 
