@@ -1,10 +1,13 @@
 /* Home Page Styles - Professional Dark Theme with Enhanced Visibility */
+
 .home-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #0f172a 0%, #0f172a 50%, #020617 100%);
 }
 
-/* ===== NAVBAR ===== */
+/* ============================================
+   NAVBAR
+   ============================================ */
 .navbar {
   position: fixed;
   top: 0;
@@ -23,6 +26,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+@media (max-width: 640px) {
+  .navbar-container {
+    padding: 0.875rem 1rem;
+  }
 }
 
 .logo {
@@ -47,11 +56,18 @@
   gap: 1.5rem;
 }
 
+@media (max-width: 640px) {
+  .nav-links {
+    gap: 1rem;
+  }
+}
+
 .nav-link {
   color: #e2e8f0;
   font-weight: 500;
   transition: all 0.2s;
   position: relative;
+  text-decoration: none;
 }
 
 .nav-link:hover {
@@ -66,6 +82,11 @@
   transition: all 0.2s;
   box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
   color: white;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
 }
 
 .btn-primary:hover {
@@ -74,7 +95,9 @@
   box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
 }
 
-/* ===== HERO SECTION ===== */
+/* ============================================
+   HERO SECTION
+   ============================================ */
 .hero-section {
   position: relative;
   padding: 8rem 1.5rem 5rem;
@@ -84,6 +107,12 @@
 @media (min-width: 768px) {
   .hero-section {
     padding: 10rem 1.5rem 7rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-section {
+    padding: 6rem 1rem 4rem;
   }
 }
 
@@ -102,7 +131,7 @@
   background: rgba(99, 102, 241, 0.4);
   border-radius: 50%;
   filter: blur(120px);
-  animation: pulse 8s ease-in-out infinite;
+  animation: heroPulse 8s ease-in-out infinite;
 }
 
 .hero-blur-2 {
@@ -114,12 +143,18 @@
   background: rgba(6, 182, 212, 0.3);
   border-radius: 50%;
   filter: blur(120px);
-  animation: pulse 8s ease-in-out infinite reverse;
+  animation: heroPulse 8s ease-in-out infinite reverse;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.1); }
+@keyframes heroPulse {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
 }
 
 .hero-grid {
@@ -178,6 +213,12 @@
   }
 }
 
+@media (max-width: 640px) {
+  .hero-title {
+    font-size: 2.5rem;
+  }
+}
+
 .hero-title-gradient {
   display: block;
   background: linear-gradient(135deg, #a5b4fc, #818cf8, #22d3ee);
@@ -213,6 +254,9 @@
   transition: all 0.3s;
   box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
   color: white;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
 }
 
 .btn-hero-primary:hover {
@@ -237,6 +281,10 @@
   transition: all 0.3s;
   color: #e2e8f0;
   background: rgba(15, 23, 42, 0.5);
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
 }
 
 .btn-hero-secondary:hover {
@@ -265,6 +313,12 @@
   align-items: center;
 }
 
+@media (max-width: 640px) {
+  .trusted-brands {
+    gap: 1.5rem;
+  }
+}
+
 .brand-item {
   color: #64748b;
   font-weight: 600;
@@ -273,11 +327,19 @@
   cursor: default;
 }
 
+@media (max-width: 640px) {
+  .brand-item {
+    font-size: 0.875rem;
+  }
+}
+
 .brand-item:hover {
   color: #a5b4fc;
 }
 
-/* ===== SERVICE CARD ===== */
+/* ============================================
+   SERVICE CARD
+   ============================================ */
 .service-card {
   position: relative;
   width: 100%;
@@ -299,6 +361,12 @@
 
 .service-card-inner {
   padding: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .service-card-inner {
+    padding: 1rem;
+  }
 }
 
 .service-header {
@@ -411,10 +479,18 @@
   margin-top: 0.25rem;
 }
 
-/* ===== FEATURES SECTION ===== */
+/* ============================================
+   FEATURES SECTION
+   ============================================ */
 .features-section {
   padding: 5rem 1.5rem;
   background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.05), transparent);
+}
+
+@media (max-width: 640px) {
+  .features-section {
+    padding: 3rem 1rem;
+  }
 }
 
 .section-header {
@@ -514,10 +590,18 @@
   line-height: 1.6;
 }
 
-/* ===== HOW IT WORKS ===== */
+/* ============================================
+   HOW IT WORKS SECTION
+   ============================================ */
 .howitworks-section {
   padding: 5rem 1.5rem;
   background: linear-gradient(to bottom, transparent, rgba(99, 102, 241, 0.03));
+}
+
+@media (max-width: 640px) {
+  .howitworks-section {
+    padding: 3rem 1rem;
+  }
 }
 
 .steps-grid {
@@ -567,9 +651,17 @@
   line-height: 1.6;
 }
 
-/* ===== CTA SECTION ===== */
+/* ============================================
+   CTA SECTION
+   ============================================ */
 .cta-section {
   padding: 0 1.5rem 6rem;
+}
+
+@media (max-width: 640px) {
+  .cta-section {
+    padding: 0 1rem 4rem;
+  }
 }
 
 .cta-card {
@@ -649,6 +741,9 @@
   font-weight: 700;
   transition: all 0.3s;
   box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.2);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
 }
 
 .btn-cta:hover {
@@ -665,7 +760,9 @@
   transform: translateX(5px);
 }
 
-/* ===== ANIMATIONS ===== */
+/* ============================================
+   ANIMATIONS - CONSOLIDATED
+   ============================================ */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -688,15 +785,6 @@
   }
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 0.8;
-  }
-}
-
 .animate-fade-up {
   animation: fadeInUp 0.6s ease-out forwards;
 }
@@ -705,47 +793,9 @@
   animation: fadeInScale 0.6s ease-out forwards;
 }
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 640px) {
-  .navbar-container {
-    padding: 0.875rem 1rem;
-  }
-  
-  .nav-links {
-    gap: 1rem;
-  }
-  
-  .hero-section {
-    padding: 6rem 1rem 4rem;
-  }
-  
-  .hero-title {
-    font-size: 2.5rem;
-  }
-  
-  .service-card-inner {
-    padding: 1rem;
-  }
-  
-  .features-section,
-  .howitworks-section {
-    padding: 3rem 1rem;
-  }
-  
-  .cta-section {
-    padding: 0 1rem 4rem;
-  }
-  
-  .trusted-brands {
-    gap: 1.5rem;
-  }
-  
-  .brand-item {
-    font-size: 0.875rem;
-  }
-}
-
-/* Scrollbar styling */
+/* ============================================
+   SCROLLBAR
+   ============================================ */
 ::-webkit-scrollbar {
   width: 8px;
 }
