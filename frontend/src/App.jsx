@@ -60,7 +60,6 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-otp" element={<VerifyOTP />} />
-
         // ADMIN ROUTES//
         <Route
           path="/admin/dashboard"
@@ -126,7 +125,6 @@ function App() {
             </AdminRoute>
           }
         />
-
         // PROVIDER ROUTES//
         <Route
           path="/provider/dashboard"
@@ -176,7 +174,6 @@ function App() {
           path="/provider/notifications"
           element={<ProviderNotifications />}
         />
-
         // CUSTOMER ROUTES//
         <Route
           path="/customer/dashboard"
@@ -220,7 +217,6 @@ function App() {
         <Route path="/customer/settings" element={<CustomerSettings />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/customer/wallet" element={<Wallet />} />
-
         //PUBLIC ROUTES//
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/services" element={<Marketplace />} />

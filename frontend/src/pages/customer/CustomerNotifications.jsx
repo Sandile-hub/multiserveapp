@@ -30,9 +30,14 @@ function CustomerNotifications() {
   const fetchNotifications = async () => {
     try {
       const res = await API.get("/notifications");
-      setNotifications(Array.isArray(res.data) ? res.data : []);
+
+      setNotifications(
+        Array.isArray(res.data?.notifications) ? res.data.notifications : [],
+      );
     } catch (error) {
       console.error("Error fetching notifications:", error);
+
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
@@ -47,7 +52,7 @@ function CustomerNotifications() {
     try {
       await API.put(`/notifications/read/${id}`);
       setNotifications((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, read: 1 } : item)),
+        prev.map((item) => (item.id === id ? { ...item, is_read: 1 } : item)),
       );
     } catch (error) {
       console.error("Error marking as read:", error);
@@ -112,7 +117,9 @@ function CustomerNotifications() {
   };
 
   // STATS
-  const unreadCount = notifications.filter((item) => !item.read).length;
+  const unreadCount = notifications.filter(
+    (item) => !Number(item.is_read),
+  ).length;
 
   // LOADING
   if (loading) {
@@ -213,7 +220,9 @@ function CustomerNotifications() {
             {filteredNotifications.map((item) => (
               <div
                 key={item.id}
-                className={`notification-item ${!item.read ? "notification-item-unread" : ""}`}
+                className={`notification-item ${
+                  !Number(item.is_read) ? "notification-item-unread" : ""
+                }`}
               >
                 <div className="notification-content">
                   {/* ICON */}
@@ -226,7 +235,7 @@ function CustomerNotifications() {
                     <div className="notification-header">
                       <div className="notification-title-wrapper">
                         <h2 className="notification-title">{item.title}</h2>
-                        {!item.read && (
+                        {!Number(item.is_read) && (
                           <span className="notification-badge">NEW</span>
                         )}
                       </div>
@@ -240,7 +249,7 @@ function CustomerNotifications() {
 
                   {/* ACTIONS */}
                   <div className="notification-actions">
-                    {!item.read && (
+                    {!Number(item.is_read) && (
                       <button
                         onClick={() => markAsRead(item.id)}
                         className="notification-action-btn read"

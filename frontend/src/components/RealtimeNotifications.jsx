@@ -1,34 +1,23 @@
-import {
-  useEffect,
-} from "react"
+import { useEffect } from "react";
+import toast from "react-hot-toast";
+import socket from "../socket";
 
-import toast from "react-hot-toast"
-
-import socket from "../socket"
-
-function RealtimeNotifications() {
-
+function RealtimeNotification() {
   useEffect(() => {
+    const handleNotification = (data) => {
+      console.log("REALTIME NOTIFICATION RECEIVED:", data);
 
-    socket.on(
-      "receive_notification",
-      (data) => {
+      toast.success(`${data.title} - ${data.message}`);
+    };
 
-      toast.success(
-        `${data.title} - ${data.message}`
-      )
-    })
+    socket.on("receive_notification", handleNotification);
 
     return () => {
+      socket.off("receive_notification", handleNotification);
+    };
+  }, []);
 
-      socket.off(
-        "receive_notification"
-      )
-    }
-
-  }, [])
-
-  return null
+  return null;
 }
 
-export default RealtimeNotifications
+export default RealtimeNotification;

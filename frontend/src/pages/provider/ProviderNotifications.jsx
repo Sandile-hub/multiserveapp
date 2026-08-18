@@ -28,8 +28,13 @@ function ProviderNotifications() {
   // FETCH NOTIFICATIONS
   const fetchNotifications = async () => {
     try {
-      const res = await API.get("/notifications");
-      setNotifications(Array.isArray(res.data) ? res.data : []);
+const res = await API.get("/notifications");
+
+setNotifications(
+  Array.isArray(res.data?.notifications)
+    ? res.data.notifications
+    : []
+);
     } catch (error) {
       console.error("Error fetching notifications:", error);
     } finally {

@@ -25,8 +25,9 @@ function AdminNotifications() {
   const fetchNotifications = async () => {
     try {
       const res = await API.get("/notifications/admin");
+
       setNotifications(
-        Array.isArray(res.data) ? res.data : res.data.notifications || [],
+        Array.isArray(res.data?.notifications) ? res.data.notifications : [],
       );
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -84,7 +85,7 @@ function AdminNotifications() {
     );
     if (!confirmDelete) return;
     try {
-      await API.delete(`/notifications/delete/${id}`);
+      await API.delete(`/notifications/${id}`);
       fetchNotifications();
     } catch (error) {
       console.error("Error deleting notification:", error);

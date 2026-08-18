@@ -1,8 +1,6 @@
-const express =
-require("express")
+const express = require("express");
 
-const router =
-express.Router()
+const router = express.Router();
 
 const {
   getNotifications,
@@ -10,16 +8,12 @@ const {
   markAsRead,
   markAllAsRead,
   deleteNotification,
-} = require(
-  "../controllers/notificationController"
-)
+} = require("../controllers/notificationController");
 
 const {
   protect,
   adminOnly,
-} = require(
-  "../middleware/authMiddleware"
-)
+} = require("../middleware/authMiddleware");
 
 // ========================================
 // USER NOTIFICATIONS
@@ -29,7 +23,7 @@ router.get(
   "/",
   protect,
   getNotifications
-)
+);
 
 // ========================================
 // ADMIN ALL NOTIFICATIONS
@@ -40,7 +34,7 @@ router.get(
   protect,
   adminOnly,
   getAllNotifications
-)
+);
 
 // ========================================
 // MARK SINGLE AS READ
@@ -50,7 +44,7 @@ router.put(
   "/read/:id",
   protect,
   markAsRead
-)
+);
 
 // ========================================
 // MARK ALL AS READ
@@ -60,16 +54,16 @@ router.put(
   "/read-all",
   protect,
   markAllAsRead
-)
+);
 
 // ========================================
 // DELETE NOTIFICATION
 // ========================================
 
 router.delete(
-  "/delete/:id",
+  "/:id",
   protect,
   deleteNotification
-)
+);
 
-module.exports = router
+module.exports = router;
