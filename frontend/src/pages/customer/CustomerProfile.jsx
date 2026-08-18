@@ -28,6 +28,7 @@ import {
 import "../../styles/Customer.css";
 
 function CustomerProfile() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const storedUser = JSON.parse(
     localStorage.getItem("user") || "{}"
   );
@@ -353,10 +354,17 @@ function CustomerProfile() {
 
   return (
     <div className="customer-dashboard">
-      <CustomerSidebar />
+      <CustomerSidebar
+  isOpen={sidebarOpen}
+  onClose={() => setSidebarOpen(false)}
+/>
 
       <div className="customer-main">
-        <CustomerNavbar />
+        <CustomerNavbar
+  toggleSidebar={() =>
+    setSidebarOpen((previous) => !previous)
+  }
+/>
 
         <div className="customer-main-content">{/* HERO */}
 <div className="profile-hero">

@@ -25,6 +25,7 @@ const socket = io(
 );
 
 function CustomerChat() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
@@ -154,10 +155,17 @@ function CustomerChat() {
 
   return (
     <div className="customer-dashboard">
-      <CustomerSidebar />
+      <CustomerSidebar
+  isOpen={sidebarOpen}
+  onClose={() => setSidebarOpen(false)}
+/>
 
       <div className="customer-main">
-        <CustomerNavbar />
+        <CustomerNavbar
+  toggleSidebar={() =>
+    setSidebarOpen((previous) => !previous)
+  }
+/>
 
         <div className="chat-page-container">
           {/* HEADER */}

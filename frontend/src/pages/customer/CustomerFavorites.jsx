@@ -29,6 +29,7 @@ import {
 import "../../styles/Customer.css";
 
 function CustomerFavorites() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
   const [favorites, setFavorites] = useState([]);
@@ -138,10 +139,17 @@ function CustomerFavorites() {
 
   return (
     <div className="customer-dashboard">
-      <CustomerSidebar />
+      <CustomerSidebar
+  isOpen={sidebarOpen}
+  onClose={() => setSidebarOpen(false)}
+/>
 
       <div className="customer-main">
-        <CustomerNavbar />
+        <CustomerNavbar
+  toggleSidebar={() =>
+    setSidebarOpen((previous) => !previous)
+  }
+/>
 
         <div className="customer-main-content">
           {/* HERO */}

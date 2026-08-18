@@ -23,6 +23,7 @@ import {
 import "../../styles/Customer.css";
 
 function Payments() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -178,11 +179,18 @@ function Payments() {
   return (
     <div className="customer-dashboard">
 
-      <CustomerSidebar />
+      <CustomerSidebar
+  isOpen={sidebarOpen}
+  onClose={() => setSidebarOpen(false)}
+/>
 
       <div className="customer-main">
 
-        <CustomerNavbar />
+        <CustomerNavbar
+  toggleSidebar={() =>
+    setSidebarOpen((previous) => !previous)
+  }
+/>
 
         <div className="customer-main-content">
 

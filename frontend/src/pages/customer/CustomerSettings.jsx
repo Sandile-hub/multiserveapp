@@ -25,6 +25,7 @@ import {
 import "../../styles/Customer.css";
 
 function CustomerSettings() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState({
     darkMode: true,
@@ -70,10 +71,17 @@ function CustomerSettings() {
 
   return (
     <div className="customer-dashboard">
-      <CustomerSidebar />
+      <CustomerSidebar
+  isOpen={sidebarOpen}
+  onClose={() => setSidebarOpen(false)}
+/>
 
       <div className="customer-main">
-        <CustomerNavbar />
+        <CustomerNavbar
+  toggleSidebar={() =>
+    setSidebarOpen((previous) => !previous)
+  }
+/>
 
         <div className="customer-main-content">
           {/* HERO SECTION */}

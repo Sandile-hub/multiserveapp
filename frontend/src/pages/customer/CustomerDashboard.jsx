@@ -19,6 +19,7 @@ import {
 import "../../styles/Customer.css";
 
 function CustomerDashboard() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     bookings: 0,
@@ -60,12 +61,19 @@ function CustomerDashboard() {
   return (
     <div className="customer-dashboard">
       {/* SIDEBAR */}
-      <CustomerSidebar />
+      <CustomerSidebar
+  isOpen={sidebarOpen}
+  onClose={() => setSidebarOpen(false)}
+/>
 
       {/* MAIN CONTENT */}
       <div className="customer-main">
         {/* NAVBAR */}
-        <CustomerNavbar />
+        <CustomerNavbar
+  toggleSidebar={() =>
+    setSidebarOpen((previous) => !previous)
+  }
+/>
 
         {/* PAGE CONTENT */}
         <div className="customer-main-content">

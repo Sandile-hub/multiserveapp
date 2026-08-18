@@ -15,11 +15,12 @@ import {
   Wallet,
   Plus,
   X,
+  Menu,
 } from "lucide-react";
 
 import "../../styles/Customer.css";
 
-function CustomerNavbar() {
+function CustomerNavbar({ toggleSidebar }) {
   const navigate = useNavigate();
 
   const location = useLocation();
@@ -218,7 +219,18 @@ function CustomerNavbar() {
           {/* LEFT SECTION */}
 
           <div className="customer-navbar-left">
-            <div className="customer-badge">
+
+  {/* MOBILE MENU */}
+
+  <button
+    onClick={toggleSidebar}
+    className="customer-mobile-menu-btn"
+    aria-label="Open customer menu"
+  >
+    <Menu size={24} />
+  </button>
+
+  <div className="customer-badge">
               <Sparkles size={16} />
               Customer Panel
             </div>
