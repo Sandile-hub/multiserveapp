@@ -1,4 +1,8 @@
-/* Authentication Pages Styles - Professional Dark Theme */
+/* ============================================
+   AUTHENTICATION PAGES STYLES
+   ============================================ */
+
+/* CONTAINER */
 .auth-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #020817 0%, #0a0f2a 50%, #020817 100%);
@@ -10,7 +14,7 @@
   overflow: hidden;
 }
 
-/* Background Decorations */
+/* BACKGROUND DECORATIONS */
 .auth-bg-decoration {
   position: absolute;
   inset: 0;
@@ -78,7 +82,7 @@
   }
 }
 
-/* Auth Card */
+/* AUTH CARD */
 .auth-card-wrapper {
   position: relative;
   z-index: 10;
@@ -120,7 +124,13 @@
   box-shadow: 0 30px 60px -12px rgba(79, 70, 229, 0.25);
 }
 
-/* Logo */
+@media (max-width: 640px) {
+  .auth-card {
+    padding: 1.5rem;
+  }
+}
+
+/* LOGO */
 .auth-logo-wrapper {
   display: flex;
   justify-content: center;
@@ -150,7 +160,19 @@
   height: 2.375rem;
 }
 
-/* Header */
+@media (max-width: 640px) {
+  .auth-logo-icon {
+    width: 4rem;
+    height: 4rem;
+  }
+  
+  .auth-logo-icon svg {
+    width: 1.875rem;
+    height: 1.875rem;
+  }
+}
+
+/* HEADER */
 .auth-header {
   text-align: center;
   margin-bottom: 2rem;
@@ -174,13 +196,19 @@
   }
 }
 
+@media (max-width: 640px) {
+  .auth-title {
+    font-size: 1.75rem;
+  }
+}
+
 .auth-subtitle {
   color: #94a3b8;
   line-height: 1.6;
   font-size: 0.875rem;
 }
 
-/* Alert Messages */
+/* ALERT MESSAGES */
 .auth-alert {
   margin-bottom: 1.5rem;
   background: rgba(239, 68, 68, 0.1);
@@ -190,6 +218,9 @@
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
   animation: slideIn 0.3s ease-out;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 @keyframes slideIn {
@@ -203,7 +234,13 @@
   }
 }
 
-/* Form */
+.alert-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+/* FORM - CONSOLIDATED */
 .auth-form {
   display: flex;
   flex-direction: column;
@@ -224,6 +261,7 @@
   font-weight: 500;
 }
 
+/* INPUT WRAPPER - CONSOLIDATED */
 .input-wrapper {
   position: relative;
 }
@@ -240,6 +278,11 @@
   transition: color 0.2s;
 }
 
+.input-wrapper:hover .input-icon {
+  color: #818cf8;
+}
+
+/* AUTH INPUT - CONSOLIDATED */
 .auth-input {
   width: 100%;
   height: 3.5rem;
@@ -271,6 +314,37 @@
   padding-right: 3.5rem;
 }
 
+@media (max-width: 640px) {
+  .auth-input {
+    height: 3rem;
+  }
+}
+
+/* OTP INPUT */
+.auth-input[name="otp"] {
+  letter-spacing: 0.25rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .auth-input[name="otp"] {
+    letter-spacing: 0.15rem;
+    font-size: 1rem;
+  }
+}
+
+/* AUTO-FILL */
+.auth-input:-webkit-autofill,
+.auth-input:-webkit-autofill:hover,
+.auth-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff;
+  -webkit-box-shadow: 0 0 0px 1000px #020817 inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* PASSWORD TOGGLE - CONSOLIDATED */
 .password-toggle-btn {
   position: absolute;
   right: 1rem;
@@ -297,7 +371,7 @@
   height: 1.25rem;
 }
 
-/* Forgot Password */
+/* FORGOT PASSWORD */
 .forgot-password-wrapper {
   display: flex;
   justify-content: flex-end;
@@ -317,7 +391,7 @@
   transform: translateX(2px);
 }
 
-/* Submit Button */
+/* SUBMIT BUTTON - CONSOLIDATED */
 .auth-submit-btn {
   width: 100%;
   height: 3.5rem;
@@ -358,7 +432,13 @@
   transform: translateX(4px);
 }
 
-/* Loading State */
+@media (max-width: 640px) {
+  .auth-submit-btn {
+    height: 3rem;
+  }
+}
+
+/* LOADING STATE */
 .auth-loading {
   display: flex;
   align-items: center;
@@ -371,16 +451,70 @@
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: white;
   border-radius: 50%;
-  animation: spin 0.6s linear infinite;
+  animation: spinnerRotate 0.6s linear infinite;
 }
 
-@keyframes spin {
+.spinner {
+  animation: spinnerRotate 0.6s linear infinite;
+}
+
+@keyframes spinnerRotate {
   to {
     transform: rotate(360deg);
   }
 }
 
-/* Footer */
+/* OTP RESEND SECTION */
+.otp-resend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+@media (max-width: 640px) {
+  .otp-resend {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+.otp-resend-text {
+  color: #94a3b8;
+  font-size: 0.875rem;
+}
+
+.otp-resend-btn {
+  background: none;
+  border: none;
+  color: #818cf8;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.otp-resend-btn:hover:not(:disabled) {
+  color: #a5b4fc;
+  text-decoration: underline;
+}
+
+.otp-resend-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.otp-hint {
+  color: #64748b;
+  font-size: 0.7rem;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+/* FOOTER */
 .auth-footer {
   margin-top: 2rem;
   text-align: center;
@@ -403,68 +537,31 @@
   text-decoration: underline;
 }
 
-/* Responsive */
-@media (max-width: 640px) {
-  .auth-card {
-    padding: 1.5rem;
-  }
-  
-  .auth-title {
-    font-size: 1.75rem;
-  }
-  
-  .auth-logo-icon {
-    width: 4rem;
-    height: 4rem;
-  }
-  
-  .auth-logo-icon svg {
-    width: 1.875rem;
-    height: 1.875rem;
-  }
-  
-  .auth-input {
-    height: 3rem;
-  }
-  
-  .auth-submit-btn {
-    height: 3rem;
-  }
-}
-
-/* Focus Visible for Accessibility */
+/* FOCUS VISIBLE */
 .auth-input:focus-visible,
 .auth-submit-btn:focus-visible,
 .password-toggle-btn:focus-visible,
 .forgot-password-btn:focus-visible,
-.auth-link:focus-visible {
+.auth-link:focus-visible,
+.otp-resend-btn:focus-visible,
+.register-link:focus-visible,
+.register-nav-link:focus-visible,
+.register-nav-btn:focus-visible {
   outline: 2px solid #818cf8;
   outline-offset: 2px;
 }
 
-/* Input Autofill Styles */
-.auth-input:-webkit-autofill,
-.auth-input:-webkit-autofill:hover,
-.auth-input:-webkit-autofill:focus {
-  -webkit-text-fill-color: #ffffff;
-  -webkit-box-shadow: 0 0 0px 1000px #020817 inset;
-  transition: background-color 5000s ease-in-out 0s;
-}
-
-/* Hover Effects */
-.input-wrapper:hover .input-icon {
-  color: #818cf8;
-}
-
-/* Smooth Transitions */
+/* SMOOTH TRANSITIONS */
 * {
   transition-property: border-color, box-shadow, transform;
   transition-duration: 0.2s;
   transition-timing-function: ease;
 }
-/* Add these to your existing Auth.css file */
 
-/* Register Page Specific Styles */
+/* ============================================
+   REGISTER PAGE STYLES
+   ============================================ */
+
 .register-container {
   min-height: 100vh;
   background: #020617;
@@ -480,7 +577,7 @@
   pointer-events: none;
 }
 
-/* Register Navbar */
+/* REGISTER NAVBAR */
 .register-navbar {
   position: relative;
   z-index: 20;
@@ -494,6 +591,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+@media (max-width: 640px) {
+  .register-navbar-container {
+    padding: 1rem;
+  }
 }
 
 .register-logo {
@@ -511,6 +614,12 @@
   transform: scale(1.05);
 }
 
+@media (max-width: 640px) {
+  .register-logo {
+    font-size: 1.5rem;
+  }
+}
+
 .register-nav-links {
   display: flex;
   align-items: center;
@@ -521,6 +630,7 @@
   color: #cbd5e1;
   transition: color 0.2s;
   font-weight: 500;
+  text-decoration: none;
 }
 
 .register-nav-link:hover {
@@ -534,6 +644,7 @@
   color: black;
   font-weight: 600;
   transition: all 0.2s;
+  text-decoration: none;
 }
 
 .register-nav-btn:hover {
@@ -541,7 +652,7 @@
   transform: translateY(-2px);
 }
 
-/* Register Main Layout */
+/* REGISTER MAIN */
 .register-main {
   position: relative;
   z-index: 10;
@@ -560,6 +671,12 @@
   align-items: center;
 }
 
+@media (max-width: 640px) {
+  .register-grid {
+    padding: 3rem 1rem;
+  }
+}
+
 @media (min-width: 1024px) {
   .register-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -567,7 +684,7 @@
   }
 }
 
-/* Left Side - Info Section */
+/* LEFT SIDE - INFO SECTION */
 .register-info {
   display: none;
 }
@@ -611,6 +728,12 @@
   }
 }
 
+@media (max-width: 640px) {
+  .register-title {
+    font-size: 2.5rem;
+  }
+}
+
 .register-title-highlight {
   color: #818cf8;
 }
@@ -623,7 +746,7 @@
   margin-bottom: 2.5rem;
 }
 
-/* Services Grid */
+/* SERVICES GRID */
 .register-services-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -645,6 +768,12 @@
   border-color: rgba(99, 102, 241, 0.3);
 }
 
+@media (max-width: 640px) {
+  .register-service-card {
+    padding: 1rem;
+  }
+}
+
 .register-service-title {
   font-size: 1.25rem;
   font-weight: 600;
@@ -652,12 +781,18 @@
   color: #f1f5f9;
 }
 
+@media (max-width: 640px) {
+  .register-service-title {
+    font-size: 1rem;
+  }
+}
+
 .register-service-desc {
   color: #94a3b8;
   font-size: 0.875rem;
 }
 
-/* Right Side - Register Card */
+/* RIGHT SIDE - REGISTER CARD */
 .register-card-wrapper {
   width: 100%;
   max-width: 32rem;
@@ -676,6 +811,12 @@
 @media (min-width: 768px) {
   .register-card {
     padding: 2.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .register-card {
+    padding: 1.5rem;
   }
 }
 
@@ -705,11 +846,17 @@
   }
 }
 
+@media (max-width: 640px) {
+  .register-card-title {
+    font-size: 1.75rem;
+  }
+}
+
 .register-card-subtitle {
   color: #94a3b8;
 }
 
-/* Form Elements (Reused from Login) */
+/* REGISTER FORM */
 .register-form {
   display: flex;
   flex-direction: column;
@@ -769,7 +916,13 @@
   padding-right: 3rem;
 }
 
-/* Select Dropdown */
+@media (max-width: 640px) {
+  .register-input {
+    height: 3rem;
+  }
+}
+
+/* REGISTER SELECT */
 .register-select {
   width: 100%;
   height: 3.5rem;
@@ -793,7 +946,7 @@
   color: white;
 }
 
-/* Password Toggle */
+/* PASSWORD TOGGLE (Register) */
 .register-password-toggle {
   position: absolute;
   right: 1rem;
@@ -814,7 +967,7 @@
   color: #818cf8;
 }
 
-/* Submit Button */
+/* REGISTER SUBMIT BUTTON */
 .register-submit-btn {
   width: 100%;
   height: 3.5rem;
@@ -843,7 +996,7 @@
   cursor: not-allowed;
 }
 
-/* Footer Link */
+/* REGISTER FOOTER */
 .register-footer {
   margin-top: 2rem;
   text-align: center;
@@ -858,6 +1011,7 @@
   color: #818cf8;
   font-weight: 500;
   transition: all 0.2s;
+  text-decoration: none;
 }
 
 .register-link:hover {
@@ -865,7 +1019,10 @@
   text-decoration: underline;
 }
 
-/* Animations */
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
 @keyframes slideInLeft {
   from {
     opacity: 0;
@@ -894,136 +1051,4 @@
 
 .animate-slide-up {
   animation: slideInUp 0.5s ease-out;
-}
-
-/* Responsive */
-@media (max-width: 640px) {
-  .register-navbar-container {
-    padding: 1rem;
-  }
-  
-  .register-logo {
-    font-size: 1.5rem;
-  }
-  
-  .register-grid {
-    padding: 3rem 1rem;
-  }
-  
-  .register-card {
-    padding: 1.5rem;
-  }
-  
-  .register-card-title {
-    font-size: 1.75rem;
-  }
-  
-  .register-title {
-    font-size: 2.5rem;
-  }
-  
-  .register-service-card {
-    padding: 1rem;
-  }
-  
-  .register-service-title {
-    font-size: 1rem;
-  }
-}
-/* ============================================
-   OTP VERIFICATION PAGE STYLES
-   ============================================ */
-
-/* OTP Input Styling */
-.auth-input[name="otp"] {
-  letter-spacing: 0.25rem;
-  font-size: 1.125rem;
-  font-weight: 600;
-  text-align: center;
-}
-
-.otp-hint {
-  color: #64748b;
-  font-size: 0.7rem;
-  margin-top: 0.5rem;
-  text-align: center;
-}
-
-/* OTP Button */
-.otp-btn {
-  background: linear-gradient(135deg, #4f46e5, #6366f1);
-}
-
-.otp-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #4338ca, #4f46e5);
-}
-
-/* Resend OTP Section */
-.otp-resend {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.otp-resend-text {
-  color: #94a3b8;
-  font-size: 0.875rem;
-}
-
-.otp-resend-btn {
-  background: none;
-  border: none;
-  color: #818cf8;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.otp-resend-btn:hover:not(:disabled) {
-  color: #a5b4fc;
-  text-decoration: underline;
-}
-
-.otp-resend-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Alert Icon */
-.alert-icon {
-  width: 1rem;
-  height: 1rem;
-  flex-shrink: 0;
-}
-
-/* Spinner */
-.spinner {
-  animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Responsive */
-@media (max-width: 640px) {
-  .otp-resend {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .auth-input[name="otp"] {
-    letter-spacing: 0.15rem;
-    font-size: 1rem;
-  }
 }
