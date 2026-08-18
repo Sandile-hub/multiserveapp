@@ -22,6 +22,7 @@ import { useState } from "react";
 import "../../styles/Customer.css";
 
 function CustomerSidebar({ isOpen = false, onClose = () => {} }) {
+  const isMobile = window.innerWidth <= 1024;
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -147,8 +148,8 @@ function CustomerSidebar({ isOpen = false, onClose = () => {} }) {
 
           <div className="customer-sidebar-header">
 
-            {!collapsed && (
-              <div className="customer-sidebar-brand">
+{(!collapsed || isOpen) && (
+  <div className="customer-sidebar-brand">
 
                 <div className="customer-sidebar-badge">
                   <Sparkles size={14} />
@@ -244,9 +245,8 @@ function CustomerSidebar({ isOpen = false, onClose = () => {} }) {
 
             {/* USER INFO */}
 
-            {!collapsed && (
-
-              <div className="customer-user-info">
+{(!collapsed || isOpen) && (
+  <div className="customer-user-info">
 
                 <h3 className="customer-user-name">
                   {user?.full_name || "User"}
@@ -317,11 +317,11 @@ function CustomerSidebar({ isOpen = false, onClose = () => {} }) {
                     className="customer-nav-icon"
                   />
 
-                  {!collapsed && (
-                    <span className="customer-nav-text">
-                      {item.title}
-                    </span>
-                  )}
+{(!collapsed || isOpen) && (
+  <span className="customer-nav-text">
+    {item.title}
+  </span>
+)}
 
                 </Link>
 
@@ -353,7 +353,7 @@ function CustomerSidebar({ isOpen = false, onClose = () => {} }) {
 
             <LogOut size={20} />
 
-            {!collapsed && (
+            {(!collapsed || isOpen) && (
               <span>Logout</span>
             )}
 

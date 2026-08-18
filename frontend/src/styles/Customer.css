@@ -6184,189 +6184,193 @@
   display: none;
 }
 
-
 /* ========================================
-   TABLET / MOBILE
+   CUSTOMER SIDEBAR - MOBILE FIX
 ======================================== */
 
 @media (max-width: 1024px) {
 
-  /* SIDEBAR */
+  /* SIDEBAR DRAWER */
 
   .customer-sidebar {
-    position: fixed;
+    position: fixed !important;
 
-    top: 0;
-    left: 0;
+    top: 0 !important;
+    left: 0 !important;
 
-    width: 280px;
-    height: 100vh;
+    width: 280px !important;
+    height: 100vh !important;
 
-    z-index: 9999;
+    z-index: 9999 !important;
 
-    transform: translateX(-100%);
+    transform: translateX(-100%) !important;
 
-    transition:
-      transform 0.3s ease;
+    transition: transform 0.3s ease !important;
 
-    box-shadow:
-      20px 0 60px rgba(0, 0, 0, 0.5);
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+
+    box-sizing: border-box;
   }
 
 
-  /* OPEN SIDEBAR */
+  /* OPEN */
 
   .customer-sidebar.customer-sidebar-mobile-open {
-    transform: translateX(0);
+    transform: translateX(0) !important;
   }
 
 
-  /* DISABLE COLLAPSED WIDTH ON MOBILE */
+  /* ========================================
+     FORCE EXPANDED SIDEBAR
+  ======================================== */
 
   .customer-sidebar.customer-sidebar-collapsed {
-    width: 280px;
+    width: 280px !important;
   }
 
 
-  /* ALWAYS SHOW SIDEBAR CONTENT ON MOBILE */
+  /* BRAND */
 
   .customer-sidebar.customer-sidebar-collapsed
-    .customer-sidebar-brand {
+  .customer-sidebar-brand {
 
-    display: block;
+    display: block !important;
   }
 
+
+  /* USER INFORMATION */
 
   .customer-sidebar.customer-sidebar-collapsed
-    .customer-user-info {
+  .customer-user-info {
 
-    display: block;
+    display: block !important;
   }
 
+
+  /* NAVIGATION TEXT */
 
   .customer-sidebar.customer-sidebar-collapsed
-    .customer-nav-text {
+  .customer-nav-text {
 
-    display: inline;
+    display: inline !important;
   }
 
 
-  /* HIDE DESKTOP COLLAPSE BUTTON */
+  /* USER CARD */
+
+  .customer-sidebar.customer-sidebar-collapsed
+  .customer-user-card {
+
+    justify-content: flex-start !important;
+  }
+
+
+  /* NAV ITEMS */
+
+  .customer-sidebar.customer-sidebar-collapsed
+  .customer-nav-item {
+
+    justify-content: flex-start !important;
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+
+
+  /* LOGOUT */
+
+  .customer-sidebar.customer-sidebar-collapsed
+  .customer-logout-btn {
+
+    justify-content: flex-start !important;
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+
+
+  /* HIDE DESKTOP COLLAPSE */
 
   .customer-sidebar-toggle {
-    display: none;
+    display: none !important;
   }
 
 
   /* SHOW MOBILE CLOSE */
 
   .customer-sidebar-mobile-close {
-    display: flex;
+    display: flex !important;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 40px;
+    height: 40px;
+
+    flex-shrink: 0;
+
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+
+    background: rgba(255, 255, 255, 0.05);
+
+    color: white;
+
+    cursor: pointer;
   }
 
 
-  /* OVERLAY */
+  /* ========================================
+     OVERLAY
+  ======================================== */
 
   .customer-sidebar-overlay {
-    display: block;
+    display: block !important;
 
-    position: fixed;
+    position: fixed !important;
 
-    inset: 0;
+    inset: 0 !important;
 
-    z-index: 9998;
+    z-index: 9998 !important;
 
-    background:
-      rgba(0, 0, 0, 0.65);
+    background: rgba(0, 0, 0, 0.65);
 
     backdrop-filter: blur(3px);
   }
 
 
-  /* MOBILE MENU BUTTON */
-
-  .customer-mobile-menu-btn {
-    display: flex;
-  }
-
-
-  /* MAIN CONTENT */
+  /* ========================================
+     MOBILE MAIN CONTENT
+  ======================================== */
 
   .customer-main {
     margin-left: 0 !important;
-
-    width: 100%;
+    width: 100% !important;
   }
 
 
-  /* NAVBAR */
-
-  .customer-navbar {
-    width: 100%;
-  }
-
-}
-@media (max-width: 768px) {
-
-  .customer-navbar {
-    padding: 12px 16px;
-  }
-
-  .customer-navbar-container {
-    gap: 12px;
-  }
-
-  .customer-navbar-left {
-    gap: 10px;
-  }
+  /* ========================================
+     HAMBURGER
+  ======================================== */
 
   .customer-mobile-menu-btn {
+    display: flex !important;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 44px;
+    height: 44px;
+
     flex-shrink: 0;
-  }
 
-  /* Hide desktop-heavy navbar elements */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
 
-  .customer-badge {
-    display: none;
-  }
+    background: rgba(255, 255, 255, 0.05);
 
-  .customer-page-subtitle {
-    display: none;
-  }
+    color: white;
 
-  .customer-page-title {
-    font-size: 20px;
-  }
-
-  .customer-search-wrapper {
-    display: none;
-  }
-
-  .customer-bookings-btn {
-    display: none;
-  }
-
-  .customer-wallet-wrapper {
-    display: none;
-  }
-
-  .customer-profile-info {
-    display: none;
-  }
-
-  .customer-chevron {
-    display: none;
-  }
-
-  .customer-notification-btn {
-    width: 42px;
-    height: 42px;
-  }
-
-  .customer-profile-btn {
-    padding: 0;
-    border: none;
-    background: transparent;
+    cursor: pointer;
   }
 
 }
