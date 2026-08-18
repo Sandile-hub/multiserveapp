@@ -597,3 +597,6 @@ CREATE TABLE email_verification_tokens (
         ON UPDATE CASCADE
 );
 DESCRIBE notifications;
+ALTER TABLE notifications
+ADD COLUMN type VARCHAR(50) NOT NULL DEFAULT 'general'
+AFTER message;

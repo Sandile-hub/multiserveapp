@@ -21,12 +21,13 @@ exports.createNotification = async (
         type,
         is_read
       )
-      VALUES (?, ?, ?, FALSE)
+      VALUES (?, ?, ?, ?, FALSE)
       `,
       [
         user_id,
         title,
         message,
+        type,
       ]
     );
 
@@ -44,6 +45,7 @@ exports.createNotification = async (
           user_id,
           title,
           message,
+          type,
           is_read: false,
           created_at: new Date(),
         });
